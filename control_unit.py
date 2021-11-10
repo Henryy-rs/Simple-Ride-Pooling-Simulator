@@ -5,14 +5,14 @@ from request.request_loader import RequestLoader
 
 
 class ControlUnit:
-    def __init__(self, start, timestep, n_vehicles, matching_method, db_dir):
+    def __init__(self, start, timestep, n_vehicles, matching_method, db_dir, dead_end=False):
         self.start = start
         self.timestep = timestep
         self.n_vehicles = n_vehicles
         self.matching_method = matching_method
         self.vehicles = {}
         self.engine = OSMEngine()
-        self.request_loader = RequestLoader(db_dir=db_dir)
+        self.request_loader = RequestLoader(db_dir=db_dir, dead_end=dead_end)
 
     def dispatch_vehicles(self):
         print("dispatch...", end="\t")

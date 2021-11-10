@@ -59,7 +59,7 @@ def greedy_matching(requests, vehicles, timestep, engine):
         if vehicle.get_state() != 0:
             v_nid, v_time_left = vehicle.get_location()
             candidate = vehicle.get_candidate_destination()
-            # 나중에 초기화 방법 수정하자
+            # todo: 초기화 방법 수정
             route = [0]
             tt_lst = [0]
             event_lst = [-1]
