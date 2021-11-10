@@ -11,8 +11,8 @@ class ControlUnit:
         self.n_vehicles = n_vehicles
         self.matching_method = matching_method
         self.vehicles = {}
-        self.engine = OSMEngine()
-        self.request_loader = RequestLoader(db_dir=db_dir, dead_end=dead_end)
+        self.engine = OSMEngine(dead_end=dead_end)
+        self.request_loader = RequestLoader(db_dir=db_dir)
 
     def dispatch_vehicles(self):
         print("dispatch...", end="\t")
