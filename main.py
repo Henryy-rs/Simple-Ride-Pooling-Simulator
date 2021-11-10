@@ -3,6 +3,7 @@ from common.time_utils import get_local_datetime
 from config.settings import TIMESTEP, db_dir
 from control_unit import ControlUnit
 
+# todo: performance measure
 if __name__ == '__main__':
     # parameters
     args = option.parser.parse_args()
@@ -24,8 +25,8 @@ if __name__ == '__main__':
         # initialize vehicles locations
         control_unit.dispatch_vehicles()
         for step in range(steps):
-            print("--------------------------------------------------")
-            print("Step: {}/{}, Datetime: {}".format(step+1, steps, get_local_datetime(current_time)))
+            print("---------------------------------------------------")
+            print("Step: {}/{}, Datetime: {}".format(step+1, steps*days, get_local_datetime(current_time)))
             control_unit.step(current_time)     # todo: time management module
             # control_unit.vehicles[0].print_history()
             current_time += TIMESTEP
