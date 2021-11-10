@@ -2,9 +2,9 @@ class Request:
     # 조건에 따라 달라지게 할 수 있음
     reject_time = 60*15
 
-    def __init__(self, rid, trip_time, origin, destination):
+    def __init__(self, rid, best_trip_time, origin, destination):
         self.id = rid
-        self.trip_time = trip_time
+        self.best_trip_time = best_trip_time
         self.origin = origin
         self.destination = destination
         self.waiting_time = 0
@@ -33,6 +33,15 @@ class Request:
 
     def get_n_customers(self):
         return self.n_customers
+
+    def get_state(self):
+        return self.state
+    """
+    def set_state(self, state):
+        self.state = state
+    """
+    def update_state(self):
+        self.state += 1
 
 
 

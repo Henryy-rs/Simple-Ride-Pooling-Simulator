@@ -6,7 +6,8 @@ import numpy as np
 class OSMEngine:
     def __init__(self):
         print("Initialize OSM Engine")
-        self.G = ox.graph_from_place("Manhattan,New York USA", network_type="drive")
+        self.G = ox.graph_from_place("Manhattan,New York USA", simplify=True, network_type="drive")
+        # todo: delete dead end
         self.G = ox.speed.add_edge_speeds(self.G)
         self.G = ox.speed.add_edge_travel_times(self.G)
         self.nodes, self.edges = ox.graph_to_gdfs(self.G)
@@ -36,19 +37,48 @@ class OSMEngine:
     def get_shortest_route(self, nid_from, nid_to):
         return ox.distance.shortest_path(self.G, nid_from, nid_to, weight='travel_time')
 
-    def get_travel_time(self, route, reject_time=None):
-        travel_time = 0
+    def get_travel_time(self, route, reject_time=None, to_list=False):
+        travel_time = [0]
         if reject_time:
             for i in range(len(route)-1):
                 nid_from = route[i]
                 nid_to = route[i+1]
-                travel_time += self.edges.loc[(nid_from, nid_to, 0)]['travel_time']
-                if travel_time >= reject_time:
+                travel_time.append(self.edges.loc[(nid_from, nid_to, 0)]['travel_time'])
+                if sum(travel_time) >= reject_time:
                     return reject_time
         else:
             for i in range(len(route)-1):
                 nid_from = route[i]
                 nid_to = route[i+1]
-                travel_time += self.edges.loc[(nid_from, nid_to, 0)]['travel_time']
+                travel_time.append(self.edges.loc[(nid_from, nid_to, 0)]['travel_time'])
+        if to_list:
+            return travel_time
+        else:
+            return sum(travel_time)
+
+    def get_shortest_travel_time(self, nid_from, nid_to, return_route=False, to_list=False, reject_time=None):
+        route = self.get_shortest_route(nid_from, nid_to)
+        if route is None:
+            print("NO ROUTE FROM {} TO {}".format(nid_from, nid_to))
+            if reject_time:
+                return reject_time
+            else:
+                if return_route:
+                    return -1, []
+                else:
+                    return -1
+                # print(route, nid_from, nid_to)
+                # raise Exception("There is no route. Use reject_time.")
+        travel_time = self.get_travel_time(route, reject_time=reject_time, to_list=to_list)
+        if return_route:
+            return travel_time, route
         return travel_time
+
+    def remove_dead_end(self):
+        self.G
+        return
+
+
+
+
 
