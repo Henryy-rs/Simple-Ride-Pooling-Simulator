@@ -8,5 +8,5 @@ algorithms.
 # todo
 
 - implement performance measurement
-- speed up execution time(precalculte travel time)
+- speed up execution(precalculte travel time)
 - implement a new algorithm
