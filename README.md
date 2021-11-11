@@ -8,5 +8,5 @@ algorithms.
 # todo
 
 - implement performance measurement  ~11.13
-- speed up execution(precalculate travel time)  ~11.15
+- speed up execution(precalculate travel time or use mesh)  ~11.15
 - implement a new algorithm ~ 11.xx
