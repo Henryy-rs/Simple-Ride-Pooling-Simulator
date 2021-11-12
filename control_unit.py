@@ -28,13 +28,13 @@ class ControlUnit:
         requests = self.request_loader.iter_request(current_time=current_time, timestep=self.timestep, engine=self.engine)
         self.match(requests)
         # update vehicles location
-        self.update_vehicles_locations()
+        self.update_vehicles_locations(current_time+self.timestep)
 
-    def update_vehicles_locations(self):
+    def update_vehicles_locations(self, next_time):
         print("update location...")
         # print(len(self.vehicles))
         for v_id, vehicle in self.vehicles.items():
-            vehicle.update_location(timestep=self.timestep, engine=self.engine)
+            vehicle.update_location(next_time, time_left=self.timestep, engine=self.engine)
         print("finished")
 
     def match(self, requests):

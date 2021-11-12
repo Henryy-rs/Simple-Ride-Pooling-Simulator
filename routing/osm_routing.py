@@ -82,6 +82,7 @@ class OSMEngine:
         print("removed")
 
     def __dfs(self, nid, visited, dead_end, reverse=False):
+        print(nid)
         if nid in visited:
             if nid not in dead_end:
                 # cycle
@@ -108,6 +109,10 @@ class OSMEngine:
     def save_network(self):
         # todo: 모든 경로의 travel time 저장하여 속도 높이기
         return
+
+    def load_network(self):
+        return
+
 
 
 
