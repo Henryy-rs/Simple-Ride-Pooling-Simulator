@@ -14,7 +14,7 @@ if __name__ == '__main__':
     days = args.days
     steps = int(3600 * 24 / TIMESTEP)
 
-    control_unit = ControlUnit(start=start_time, timestep=TIMESTEP, n_vehicles=args.vehicles,
+    control_unit = ControlUnit(current_time=start_time, timestep=TIMESTEP, n_vehicles=args.vehicles,
                                matching_method=args.method, keys=args.keys, db_dir=db_dir, save_dir=args.save_dir)
 
     print("Start: {}".format(get_local_datetime(start_time)))
@@ -27,6 +27,6 @@ if __name__ == '__main__':
         for step in range(steps):
             print("---------------------------------------------------")
             print("Step: {}/{}, Datetime: {}".format(step+1, steps*days, get_local_datetime(current_time)))
-            control_unit.step(current_time)     # todo: time management module
+            control_unit.step()     # TODO: logger
             current_time += TIMESTEP
 

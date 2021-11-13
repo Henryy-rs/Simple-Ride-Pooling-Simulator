@@ -5,15 +5,15 @@ from request.request_loader import RequestLoader
 from record.recorder import Recorder
 
 class ControlUnit:
-    def __init__(self, start, timestep, n_vehicles, matching_method, keys, db_dir, save_dir):
-        self.start = start
+    def __init__(self, start_time, timestep, n_vehicles, matching_method, keys, db_dir, save_dir):
         self.timestep = timestep
-        self.current_time = 0
+        self.current_time = start_time
+        self.steps = 1
         self.n_vehicles = n_vehicles
         self.matching_method = matching_method
         self.vehicles = {}
         self.requests = {}
-        self.r_ids_add = []
+        self.r_ids_to_add = []
         self.engine = OSMEngine()
         self.request_loader = RequestLoader(db_dir=db_dir)
         self.recorder = Recorder(keys=keys, save_dir=save_dir)
@@ -27,14 +27,15 @@ class ControlUnit:
 
         print("finished")
 
-    def step(self, current_time):
-        self.current_time = current_time
+    def step(self):
         requests = self.request_loader.iter_request(self.current_time, self.timestep, engine=self.engine)
         self.__match(requests)
         self.__update_vehicles_locations()
-        self.__gather_records()
+        self.__gather_records(requests)
         print("matched: ", self.__get_n_matched())
         self.__add_requests(requests)
+        self.current_time += self.timestep
+        self.steps += 1
 
     def __update_vehicles_locations(self):
         print("update location...")
@@ -47,15 +48,22 @@ class ControlUnit:
         if self.matching_method == "greedy":
             matcing_policy.greedy_matching(requests, self.vehicles, self.timestep, engine=self.engine)
 
-    def __gather_records(self):
+    def __gather_records(self, requests):
         for v_id, vehicle in self.vehicles.items():
             for record in vehicle.send_event_history():
                 self.recorder.put_event(record, next_time=self.current_time + self.timestep, control_unit=self)
 
-            self.recorder.put_v_metrics(v_id, vehicle.send_vehicle_history())
+            serve_time, occupancy_rate = vehicle.send_vehicle_history()
+            # TODO: add travel distance
+            self.recorder.put_metrics(v_id=v_id, serve_time=serve_time, occunpancy_rate=occupancy_rate)
+
+        accept_rate = self.__get_n_matched()/len(requests)
+        # TODO: add throughput
+        self.recorder.put_metrics(steps=self.steps, accept_rate=accept_rate)
+        self.__drop_requests(requests)
             
     def manage_request(self, r_id):
-        self.r_ids_add.append(r_id)
+        self.r_ids_to_add.append(r_id)
 
     def release_request(self, r_id):
         return self.requests.pop(r_id)
@@ -63,10 +71,10 @@ class ControlUnit:
     def __get_n_matched(self):
         return len(self.r_ids_add)
 
-    def __add_requests(self, requests):
+    def __drop_requests(self, requests):
         for r_id in self.r_ids_add:
             self.requests[r_id] = requests[r_id]
-        self.r_ids_add.clear()
+        self.r_ids_to_add.clear()
 
 
 

@@ -9,8 +9,8 @@ class Recorder:
         self.df = self.df.set_index(['v_id', 'r_id', 'r_state'])
         self.requests_to_record = [] 
         self.save_dir=save_dir
-        vehicle_metrics = {}
-        system_metrics = {}
+        vehicle_metrics = None
+        system_metrics = None
 
         return
 
@@ -27,10 +27,7 @@ class Recorder:
             request = control_unit.release_request(r_id)
             self.requests_to_record.append(request)
 
-    def put_vhc_metrics(**kwargs):
-        return
-
-    def put_sys_metrics(**kwargs):
+    def put_metrics(**kwargs):
         return
 
     def record_requests(self):
