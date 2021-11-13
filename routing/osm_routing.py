@@ -38,6 +38,7 @@ class OSMEngine:
                 if nid not in self.edges.index.get_level_values('v'):
                     return []
             adjacent_lst = list(map(lambda x: x[0], self.edges.loc[:, nid, :].index))
+            
         return adjacent_lst
 
     def get_shortest_route(self, nid_from, nid_to):
@@ -45,11 +46,13 @@ class OSMEngine:
 
     def get_travel_time(self, route, reject_time=None, to_list=False):
         travel_time = [0]
+
         if reject_time:
             for i in range(len(route)-1):
                 nid_from = route[i]
                 nid_to = route[i+1]
                 travel_time.append(self.edges.loc[(nid_from, nid_to, 0)]['travel_time'])
+
                 if sum(travel_time) >= reject_time:
                     return reject_time
         else:
@@ -57,6 +60,7 @@ class OSMEngine:
                 nid_from = route[i]
                 nid_to = route[i+1]
                 travel_time.append(self.edges.loc[(nid_from, nid_to, 0)]['travel_time'])
+
         if to_list:
             return travel_time
         else:
@@ -65,6 +69,7 @@ class OSMEngine:
     def get_shortest_travel_time(self, nid_from, nid_to, return_route=False, to_list=False, reject_time=None):
         route = self.get_shortest_route(nid_from, nid_to)
         travel_time = self.get_travel_time(route, reject_time=reject_time, to_list=to_list)
+
         if return_route:
             return travel_time, route
         return travel_time
@@ -82,7 +87,6 @@ class OSMEngine:
         print("removed")
 
     def __dfs(self, nid, visited, dead_end, reverse=False):
-        print(nid)
         if nid in visited:
             if nid not in dead_end:
                 # cycle
@@ -90,20 +94,25 @@ class OSMEngine:
         else:
             visited[nid] = True
             adjacent_lst = self.get_adjacent_node(nid, reverse=reverse)
+
             if adjacent_lst:
                 check_adj = []
                 for adj_nid in adjacent_lst:
                     check_adj.append(self.__dfs(adj_nid, visited, dead_end, reverse=reverse))
+
                 if False in check_adj:
                     dead_end[nid] = False
                     return dead_end[nid]
 
             self.nodes = self.nodes.drop(labels=nid, axis=0)
+
             if reverse:
                 self.edges = self.edges.drop(labels=nid, level='u', axis=0)
             else:
                 self.edges = self.edges.drop(labels=nid, level='v', axis=0)
             dead_end[nid] = True
+            print("drop node", nid)
+
         return dead_end[nid]
 
     def save_network(self):

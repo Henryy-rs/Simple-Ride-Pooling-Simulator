@@ -1,17 +1,17 @@
+from datetime import time
 import common.custom_tools as ct
 
 
 def greedy_matching(requests, vehicles, timestep, engine):
-    for r_id, request in requests.items():
+    for request in requests.values():
         r_nid = request.get_origin()
-        n_customers = request.get_n_customers()
         reject_time = request.get_reject_time()
 
         min_travel_time = reject_time
         min_v_id = -1
 
         for v_id, vehicle in vehicles.items():
-            if vehicle.can_en_route(n_customers):
+            if vehicle.can_en_route(request):
                 # location heading and time left
                 v_nid, v_time_left = vehicle.get_location()
                 travel_time = engine.get_shortest_travel_time(v_nid, r_nid, reject_time=reject_time) + v_time_left
@@ -21,7 +21,7 @@ def greedy_matching(requests, vehicles, timestep, engine):
 
         if min_v_id != -1:
             # 추가하고 현재 위치에서 가장 가까운 목적지(아직 태우지 않은 손님 or 태운 손님 도착지)로 간다.
-            vehicles[min_v_id].en_route(request, r_id, n_customers)
+            vehicles[min_v_id].en_route(request, time_left=timestep)
 
     def find_min_candidate(candidate_):
         r_id_, r_nid_ = candidate_[0]
@@ -31,6 +31,7 @@ def greedy_matching(requests, vehicles, timestep, engine):
         min_r_id_ = r_id_
         min_route_ = route_
         min_index_ = 0
+
         for i in range(1, len(candidate_)):
             r_id_, r_nid_ = candidate_[i]
             travel_time_, route_ = engine.get_shortest_travel_time(v_nid_, r_nid_, return_route=True, to_list=True)
@@ -39,6 +40,7 @@ def greedy_matching(requests, vehicles, timestep, engine):
                 min_r_id_ = r_id_
                 min_route_ = route_
                 min_index_ = i
+
         candidate_.pop(min_index_)
         return min_r_id_, min_route_, min_tt_lst_,
 
@@ -47,6 +49,7 @@ def greedy_matching(requests, vehicles, timestep, engine):
         route_ = ct.concate_route(route_, min_route_)
         tt_lst_ = ct.concate_tt_lst(tt_lst_, min_tt_lst_)
         event_lst_ = ct.mark_event(event_lst_, min_r_id_, len(min_route_))
+
         if sum(tt_lst_) + time_left_ >= timestep:
             return route_, tt_lst_, event_lst_
         else:
@@ -58,7 +61,7 @@ def greedy_matching(requests, vehicles, timestep, engine):
     for v_id, vehicle in vehicles.items():
         if vehicle.get_state() != 0:
             v_nid, v_time_left = vehicle.get_location()
-            candidate = vehicle.get_candidate_destination()
+            candidate = vehicle.get_candidests()
             # todo: 초기화 방법 수정
             route = [0]
             tt_lst = [0]
