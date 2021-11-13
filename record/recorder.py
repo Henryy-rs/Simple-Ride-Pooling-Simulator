@@ -28,6 +28,7 @@ class Recorder:
             self.requests_to_record.append(request)
 
     def put_metrics(**kwargs):
+        print(kwargs)
         return
 
     def record_requests(self):

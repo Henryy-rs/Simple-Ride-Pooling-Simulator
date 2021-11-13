@@ -5,10 +5,10 @@ from request.request_loader import RequestLoader
 from record.recorder import Recorder
 
 class ControlUnit:
-    def __init__(self, start_time, timestep, n_vehicles, matching_method, keys, db_dir, save_dir):
+    def __init__(self, current_time, timestep, n_vehicles, matching_method, keys, db_dir, save_dir):
         self.timestep = timestep
-        self.current_time = start_time
-        self.steps = 1
+        self.current_time = current_time
+        self.current_step = 1
         self.n_vehicles = n_vehicles
         self.matching_method = matching_method
         self.vehicles = {}
@@ -32,10 +32,9 @@ class ControlUnit:
         self.__match(requests)
         self.__update_vehicles_locations()
         self.__gather_records(requests)
-        print("matched: ", self.__get_n_matched())
-        self.__add_requests(requests)
+        print(self.recorder.df)
         self.current_time += self.timestep
-        self.steps += 1
+        self.current_step += 1
 
     def __update_vehicles_locations(self):
         print("update location...")
@@ -54,12 +53,15 @@ class ControlUnit:
                 self.recorder.put_event(record, next_time=self.current_time + self.timestep, control_unit=self)
 
             serve_time, occupancy_rate = vehicle.send_vehicle_history()
+            print("serve_time: ", serve_time)
+            print("occupancy_rate", occupancy_rate)
             # TODO: add travel distance
-            self.recorder.put_metrics(v_id=v_id, serve_time=serve_time, occunpancy_rate=occupancy_rate)
+            #self.recorder.put_metrics(step = self.current_step, v_id = v_id, serve_time = serve_time, occunpancy_rate = occupancy_rate)
 
         accept_rate = self.__get_n_matched()/len(requests)
+        print("accept_rate: ", accept_rate)
         # TODO: add throughput
-        self.recorder.put_metrics(steps=self.steps, accept_rate=accept_rate)
+        #self.recorder.put_metrics(steps=self.current_step, accept_rate=accept_rate)
         self.__drop_requests(requests)
             
     def manage_request(self, r_id):
@@ -69,10 +71,10 @@ class ControlUnit:
         return self.requests.pop(r_id)
 
     def __get_n_matched(self):
-        return len(self.r_ids_add)
+        return len(self.r_ids_to_add)
 
     def __drop_requests(self, requests):
-        for r_id in self.r_ids_add:
+        for r_id in self.r_ids_to_add:
             self.requests[r_id] = requests[r_id]
         self.r_ids_to_add.clear()
 

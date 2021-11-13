@@ -58,7 +58,7 @@ class Vehicle:
                 if self.__occupancy > 0:
                     self.__serve_time += self.__time_left
 
-                if len(self.__route) != 0:
+                if len(self.__route_event) != 0:
                     r_id = self.__route_event.popleft()
 
                     if r_id != -1:  # nothing happens when we get to the node.
@@ -70,12 +70,17 @@ class Vehicle:
                         elif request.get_state() == 3:
                             self.__drop_off(r_id, time_left)
                         else:
-                            raise Exception("invalid request __state.")
-
-                    self.__location = self.__route.popleft()
-                    self.__time_left = self.__route_travel_t.popleft()
+                            raise Exception("invalid request state.")
+                    if self.__state != 0:
+                        self.__location = self.__route.popleft()
+                        self.__time_left = self.__route_travel_t.popleft()
+                    else:
+                        print("state zero")
                 else:
-                    raise Exception("asynchronous __route expresion.")
+                    print(self.__route)
+                    print(self.__route_event)
+                    print(self.__route_travel_t)
+                    raise Exception("asynchronous route expresion.")
 
                 self.update_location(time_left, engine)
 
@@ -110,7 +115,7 @@ class Vehicle:
 
         assert r_state == 0, "__state doesn't match."
 
-        request.update_state()    # waiting __state
+        request.update_state()    # waiting state
         self.__requests[r_id] = request
         self.__capacity -= len(request)
 
