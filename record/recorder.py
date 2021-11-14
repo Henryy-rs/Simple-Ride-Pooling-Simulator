@@ -14,12 +14,12 @@ class Recorder:
 
         return
 
+    # TODO: change args to **kwargs
     def put_event(self, record, next_time, control_unit):
-        # print("record: ", record)
         r_state = record['r_state']
         r_id = record['r_id']
         record['time_left'] = next_time - record['time_left']
-        self.df.append(record, ignore_index=True)
+        self.df = self.df.append(record, ignore_index=True)
 
         if r_state == 1:
             control_unit.manage_request(r_id)
@@ -27,8 +27,11 @@ class Recorder:
             request = control_unit.release_request(r_id)
             self.requests_to_record.append(request)
 
-    def put_metrics(**kwargs):
-        print(kwargs)
+    def put_metrics(self, vehicles=True, **kwargs):
+        if vehicles:
+            pass
+            # if self.vehicle_metrics == None:
+            #     self.vehicle_metrics = pd.DataFrame(columns=kwargs.keys())
         return
 
     def record_requests(self):

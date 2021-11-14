@@ -32,7 +32,6 @@ class ControlUnit:
         self.__match(requests)
         self.__update_vehicles_locations()
         self.__gather_records(requests)
-        print(self.recorder.df)
         self.current_time += self.timestep
         self.current_step += 1
 
@@ -53,15 +52,12 @@ class ControlUnit:
                 self.recorder.put_event(record, next_time=self.current_time + self.timestep, control_unit=self)
 
             serve_time, occupancy_rate = vehicle.send_vehicle_history()
-            print("serve_time: ", serve_time)
-            print("occupancy_rate", occupancy_rate)
             # TODO: add travel distance
-            #self.recorder.put_metrics(step = self.current_step, v_id = v_id, serve_time = serve_time, occunpancy_rate = occupancy_rate)
+            self.recorder.put_metrics(step=self.current_step, v_id=v_id, serve_time=serve_time, occunpancy_rate=occupancy_rate)
 
         accept_rate = self.__get_n_matched()/len(requests)
-        print("accept_rate: ", accept_rate)
         # TODO: add throughput
-        #self.recorder.put_metrics(steps=self.current_step, accept_rate=accept_rate)
+        self.recorder.put_metrics(vehicles=False, step=self.current_step, accept_rate=accept_rate)
         self.__drop_requests(requests)
             
     def manage_request(self, r_id):

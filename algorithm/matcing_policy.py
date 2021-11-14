@@ -24,24 +24,38 @@ def greedy_matching(requests, vehicles, timestep, engine):
             vehicles[min_v_id].en_route(request, time_left=timestep)
 
     def find_min_candidate(candidate_):
-        r_id_, r_nid_ = candidate_[0]
+        r_id_, r_state_, origin_, destination_ = candidate_[0].values()
         v_nid_, v_time_left_ = vehicle.get_location()
-        travel_time_, route_ = engine.get_shortest_travel_time(v_nid_, r_nid_, return_route=True, to_list=True)
+        if r_state_ == 1:
+            travel_time_, route_ = engine.get_shortest_travel_time(v_nid_, origin_, return_route=True, to_list=True)
+        else:
+            travel_time_, route_ = engine.get_shortest_travel_time(v_nid_, destination_, return_route=True, to_list=True)
         min_tt_lst_ = travel_time_
         min_r_id_ = r_id_
         min_route_ = route_
         min_index_ = 0
+        min_state_ = r_state_
 
         for i in range(1, len(candidate_)):
-            r_id_, r_nid_ = candidate_[i]
-            travel_time_, route_ = engine.get_shortest_travel_time(v_nid_, r_nid_, return_route=True, to_list=True)
+            r_id_, r_state_, origin_, destination_ = candidate_[i].values()
+
+            if r_state_ == 1:
+                travel_time_, route_ = engine.get_shortest_travel_time(v_nid_, origin_, return_route=True, to_list=True)
+            else:
+                travel_time_, route_ = engine.get_shortest_travel_time(v_nid_, destination_, return_route=True, to_list=True)
+
             if sum(travel_time_) < sum(min_tt_lst_):
                 min_tt_lst_ = travel_time_
                 min_r_id_ = r_id_
                 min_route_ = route_
                 min_index_ = i
+                min_state_ = r_state_
 
-        candidate_.pop(min_index_)
+        if min_state_ == 1:
+            candidate_[min_index_]['r_state'] += 1
+        else:
+            candidate_.pop(min_index_)
+            
         return min_r_id_, min_route_, min_tt_lst_,
 
     def plan_route(vehicle_, candidate_, route_, tt_lst_, event_lst_, time_left_):
@@ -62,7 +76,7 @@ def greedy_matching(requests, vehicles, timestep, engine):
         if vehicle.get_state() != 0:
             v_nid, v_time_left = vehicle.get_location()
             candidate = vehicle.get_candidests()
-            # todo: 초기화 방법 수정
+            # TODO: 초기화 방법 수정
             route = [0]
             tt_lst = [0]
             event_lst = [-1]

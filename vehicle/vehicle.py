@@ -30,7 +30,8 @@ class Vehicle:
         """
         update_location
         ================
-
+        update vehicle's location recursively
+        
         Args:
 
             - next_time: float, start time of next step.
@@ -38,20 +39,17 @@ class Vehicle:
             - engine: OSMEngine, routing engine.
         """
         if self.__time_left > time_left:
+            if self.__occupancy != 0:
+                self.__serve_time += time_left
             self.__time_left -= time_left
         else:
             if self.__state == 0:
                 time_left -= self.__time_left
                 adjacent_lst = engine.get_adjacent_node(self.__location)
-
-                if len(adjacent_lst) == 0:  # if dead end
-                    self.reset_location(engine=engine)
-                else:
-                    adjacent = np.random.choice(adjacent_lst)
-                    self.__time_left = engine.get_travel_time([self.__location, adjacent])
-                    self.__location = adjacent
-                    self.update_location(time_left, engine)
-
+                adjacent = np.random.choice(adjacent_lst)
+                self.__time_left = engine.get_travel_time([self.__location, adjacent])
+                self.__location = adjacent
+                self.update_location(time_left, engine)
             else:
                 time_left -= self.__time_left
 
@@ -71,15 +69,12 @@ class Vehicle:
                             self.__drop_off(r_id, time_left)
                         else:
                             raise Exception("invalid request state.")
+
                     if self.__state != 0:
                         self.__location = self.__route.popleft()
                         self.__time_left = self.__route_travel_t.popleft()
-                    else:
-                        print("state zero")
+
                 else:
-                    print(self.__route)
-                    print(self.__route_event)
-                    print(self.__route_travel_t)
                     raise Exception("asynchronous route expresion.")
 
                 self.update_location(time_left, engine)
@@ -152,8 +147,9 @@ class Vehicle:
         assert self.__route_travel_t.popleft() == 0, "invalid travel time list"
         assert len(self.__route) == len(self.__route_travel_t), "asynchronous"
 
-        # event 는 도착하면 pop 할 것
-        # __time_left 는 건드릴 필요 없음
+        # event 는 노드에 도착했을 때 pop한다. 따라서 state가 1이나 2면 event는 항상 남아있어야 한다.
+        # TODO: 추후 안정성이 확보되면 event 길이 검사 코드 삭제
+        # __time_left 는 변경하지 않아도 된다. travel deq 안의 첫 시간은 항상 0이다.
 
     # 현재 보유중인 request 상황을 참고하여 가능한 다음 목적지를 반환
     def get_candidests(self):
@@ -165,15 +161,13 @@ class Vehicle:
         """
         candidate_destination = []
 
-        for rid, request in self.__requests.items():
+        for r_id, request in self.__requests.items():
             r_state = request.get_state()
 
             assert r_state == 1 or 2
 
-            if r_state == 1:
-                candidate_destination.append((rid, request.get_origin()))
-            else:
-                candidate_destination.append((rid, request.get_destination()))
+            candidate_destination.append({'r_id': r_id, 'r_state': r_state, 'origin': request.get_origin(),
+             'destination': request.get_destination()})
 
         return candidate_destination
 
