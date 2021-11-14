@@ -7,6 +7,6 @@ Ride-pooling simulator for evaluating matching and routing
 algorithms.
 # todo
 
-- implement performance measurement  ~11.14
-- speed up execution(precalculate travel time or use mesh)  ~11.16
+- implement performance measurement  ~11.15
+- speed up execution(precalculate travel time, use mesh, multiprocessing)  ~11.18
 - implement a new algorithm ~ 11.xx
