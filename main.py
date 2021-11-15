@@ -15,7 +15,7 @@ if __name__ == '__main__':
     steps = int(3600 * 24 / TIMESTEP)
 
     control_unit = ControlUnit(current_time=start_time, timestep=TIMESTEP, n_vehicles=args.vehicles,
-                               matching_method=args.method, keys=args.keys, db_dir=db_dir, save_dir=args.save_dir)
+                               matching_method=args.method, db_dir=db_dir, save_dir=args.save_dir)
 
     print("Start: {}".format(get_local_datetime(start_time)))
     print("End  : {}".format(get_local_datetime(end_time)))

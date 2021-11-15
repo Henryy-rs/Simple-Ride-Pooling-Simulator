@@ -60,6 +60,12 @@ class Vehicle:
                     r_id = self.__route_event.popleft()
 
                     if r_id != -1:  # nothing happens when we get to the node.
+                        if type(r_id) != int:
+                            print(self.__location) 
+                            print(self.__history)
+                            print(r_id)
+                            print(self.__requests[r_id[0]].log_info())
+                            raise Exception("gottcha")
                         request = self.__requests[r_id]
                         request.update_state()
 
@@ -125,7 +131,7 @@ class Vehicle:
     def __pick_up(self, r_id, time_left):
         self.__occupancy += len(self.__requests[r_id])
         self.__record(r_id, self.__requests[r_id].get_state(), time_left)
-        print("vehicle {} pick up user {}".format(self.__v_id, r_id))
+        print("vehicle {} picks up user {}".format(self.__v_id, r_id))
 
     def __drop_off(self, r_id, time_left):
         request = self.__requests.pop(r_id)
@@ -148,8 +154,8 @@ class Vehicle:
         assert len(self.__route) == len(self.__route_travel_t), "asynchronous"
 
         # event 는 노드에 도착했을 때 pop한다. 따라서 state가 1이나 2면 event는 항상 남아있어야 한다.
-        # TODO: 추후 안정성이 확보되면 event 길이 검사 코드 삭제
         # __time_left 는 변경하지 않아도 된다. travel deq 안의 첫 시간은 항상 0이다.
+        # TODO: 추후 안정성이 확보되면 event 길이 검사 코드 삭제
 
     # 현재 보유중인 request 상황을 참고하여 가능한 다음 목적지를 반환
     def get_candidests(self):
@@ -174,7 +180,7 @@ class Vehicle:
     
     def __record(self, r_id, r_state, time_left):
         self.__history.append({'v_id':self.__v_id, 'r_id': r_id, 'r_state': r_state, 
-        'time_left': time_left, 'location':self.__location})
+        'time': int(time_left), 'location':self.__location})
    
     def send_event_history(self):
         history = self.__history.copy()

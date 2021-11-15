@@ -3,9 +3,11 @@ from vehicle.vehicle import Vehicle
 from algorithm import matcing_policy
 from request.request_loader import RequestLoader
 from record.recorder import Recorder
+from multiprocessing import Process
+
 
 class ControlUnit:
-    def __init__(self, current_time, timestep, n_vehicles, matching_method, keys, db_dir, save_dir):
+    def __init__(self, current_time, timestep, n_vehicles, matching_method, db_dir, save_dir, num_workers=0):
         self.timestep = timestep
         self.current_time = current_time
         self.current_step = 1
@@ -16,7 +18,8 @@ class ControlUnit:
         self.r_ids_to_add = []
         self.engine = OSMEngine()
         self.request_loader = RequestLoader(db_dir=db_dir)
-        self.recorder = Recorder(keys=keys, save_dir=save_dir)
+        self.recorder = Recorder(save_dir=save_dir)
+        self.num_workers = num_workers
 
     def dispatch_vehicles(self):
         print("dispatch...", end="\t")
@@ -48,17 +51,19 @@ class ControlUnit:
 
     def __gather_records(self, requests):
         for v_id, vehicle in self.vehicles.items():
-            for record in vehicle.send_event_history():
-                self.recorder.put_event(record, next_time=self.current_time + self.timestep, control_unit=self)
-
+            records = vehicle.send_event_history()
+            self.recorder.put_events(records, next_time=self.current_time + self.timestep, control_unit=self)
             serve_time, occupancy_rate = vehicle.send_vehicle_history()
             # TODO: add travel distance
-            self.recorder.put_metrics(step=self.current_step, v_id=v_id, serve_time=serve_time, occunpancy_rate=occupancy_rate)
+            self.recorder.put_metrics(self.current_step, v_id=v_id, serve_time=serve_time, occunpancy_rate=occupancy_rate)
 
         accept_rate = self.__get_n_matched()/len(requests)
         # TODO: add throughput
-        self.recorder.put_metrics(vehicles=False, step=self.current_step, accept_rate=accept_rate)
-        self.__drop_requests(requests)
+        self.recorder.put_metrics(self.current_step, vehicles=False, accept_rate=accept_rate)
+        self.__filter_requests(requests)
+        print(self.recorder.df)
+        print(self.recorder.v_df)
+        print(self.recorder.sys_metrics)
             
     def manage_request(self, r_id):
         self.r_ids_to_add.append(r_id)
@@ -69,7 +74,7 @@ class ControlUnit:
     def __get_n_matched(self):
         return len(self.r_ids_to_add)
 
-    def __drop_requests(self, requests):
+    def __filter_requests(self, requests):
         for r_id in self.r_ids_to_add:
             self.requests[r_id] = requests[r_id]
         self.r_ids_to_add.clear()
