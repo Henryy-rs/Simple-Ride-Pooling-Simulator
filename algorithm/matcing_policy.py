@@ -62,7 +62,7 @@ def greedy_matching(requests, vehicles, timestep, engine):
         route_ = ct.concate_route(route_, min_route_)
         tt_lst_ = ct.concate_tt_lst(tt_lst_, min_tt_lst_)
         event_lst_ = ct.mark_event(event_lst_, min_r_id_, len(min_route_))
-        v_nid_ = route_[-1]     # next v_nid
+        v_nid_ = route_[-1]     # next vehicle node id
 
         if sum(tt_lst_) + time_left_ >= timestep:
             return route_, tt_lst_, event_lst_

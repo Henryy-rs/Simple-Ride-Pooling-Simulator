@@ -124,6 +124,12 @@ class OSMEngine:
     def save_network(self, filepath):
         ox.save_graphml(self.G, filepath)
 
+    def compute_all(self):
+        return
+
+
+
+
 
 
 

@@ -71,6 +71,11 @@ class Recorder:
         tmp_df = tmp_df.set_index('r_id')
         self.r_df = pd.concat([self.r_df, tmp_df], axis=0)
 
+    def print(self):
+        print(self.v_df.head(50))
+        print(self.r_df.head(50))
+        print(self.sys_metrics)
+
 
 def dict_v2type(dic):
     keys = list(dic.keys())

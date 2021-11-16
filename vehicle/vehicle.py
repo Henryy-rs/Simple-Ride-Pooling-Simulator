@@ -1,6 +1,6 @@
-from logging import raiseExceptions
 import numpy as np
 from collections import deque
+from routing.route import Route
 
 
 class Vehicle:
@@ -17,9 +17,7 @@ class Vehicle:
         self.__time_left = 0
 
         # route expression
-        self.__route = deque()
-        self.__route_travel_t = deque()
-        self.__route_event = deque()
+        self.__route = Route()
 
         # state expression
         self.__capacity = self.__max_capacity
@@ -38,6 +36,7 @@ class Vehicle:
             - __time_left: float, time remaining until next step.
             - engine: OSMEngine, routing engine.
         """
+
         if self.__time_left > time_left:
             if self.__occupancy != 0:
                 self.__serve_time += time_left
@@ -56,27 +55,24 @@ class Vehicle:
                 if self.__occupancy > 0:
                     self.__serve_time += self.__time_left
 
-                if len(self.__route_event) != 0:    # can be removed later.
-                    r_id = self.__route_event.popleft()
+                r_id = self.__route.pop_event()
 
-                    if r_id != -1:  # nothing happens when we get to the node.
-                        if hasattr(r_id, '__iter__'):   # two or more events happen.
-                            for i in range(len(r_id)):
-                                self.__event(r_id[i], time_left)
-                            if len(set(r_id)) != len(r_id):
-                                raise Exception("duplicate events")
-                        else:
-                            self.__event(r_id, time_left)
+                if r_id != -1:
+                    if hasattr(r_id, '__iter__'):   # two or more events happen.
+                        for i in range(len(r_id)):
+                            self.__event(r_id[i], time_left)
+                        if len(set(r_id)) != len(r_id):
+                            raise Exception("duplicate events")
+                    else:
+                        self.__event(r_id, time_left)
 
-                    if self.__state != 0:
-                        if len(self.__route) == 0:
-                            print(self.__capacity, self.__occupancy, **self.__requests)
-                            raise Exception("state doesn't match with route.")
-                        self.__location = self.__route.popleft()
-                        self.__time_left = self.__route_travel_t.popleft()
-
-                else:
-                    raise Exception("asynchronous route expresion.")
+                if self.__state != 0:
+                    if len(self.__route) == 0:
+                        print(self.__capacity, self.__occupancy)
+                        map(lambda x: x.log_info(), *self.__requests)
+                        raise Exception("state doesn't match with route.")
+                    else:
+                        self.__location, self.__time_left = self.__route.pop_next()
 
                 self.update_location(time_left, engine)
 
@@ -151,17 +147,10 @@ class Vehicle:
         print("vehicle {} drops off user {}".format(self.__v_id, r_id))
 
     def set_plan(self, route, route_travel_t, route_event):
-        self.__route = deque(route)
-        self.__route_travel_t = deque(route_travel_t)
-        self.__route_event = deque(route_event)
-
-        assert self.__location == self.__route.popleft(), "__location doesn't match"
-        assert self.__route_travel_t.popleft() == 0, "invalid travel time list"
-        assert len(self.__route) == len(self.__route_travel_t), "asynchronous"
+        self.__route.push(route, route_travel_t, route_event)
 
         # event 는 노드에 도착했을 때 pop한다. 따라서 state가 1이나 2면 event는 항상 남아있어야 한다.
         # __time_left 는 변경하지 않아도 된다. travel deq 안의 첫 시간은 항상 0이다.
-        # TODO: 추후 안정성이 확보되면 event 길이 검사 코드 삭제
 
     # 현재 보유중인 request 상황을 참고하여 가능한 다음 목적지를 반환
     def get_candidests(self):

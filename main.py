@@ -30,10 +30,13 @@ if __name__ == '__main__':
     for day in range(days):
         # initialize vehicles locations
         control_unit.dispatch_vehicles()
-
-        for step in range(steps):
+        step = 1
+        for i in range(steps):
             print("---------------------------------------------------")
-            print("Step: {}/{}, Datetime: {}".format(step+1, steps*days, get_local_datetime(current_time)))
+            print("Step: {}/{}, Datetime: {}".format(step, steps*days, get_local_datetime(current_time)))
             control_unit.step()     # TODO: logger
+            step += 1
             current_time += time_step
+
+    control_unit.print()
 

@@ -86,6 +86,9 @@ class ControlUnit:
             self.requests[r_id] = requests[r_id]
         self.r_ids_to_add.clear()
 
+    def print(self):
+        self.recorder.print()
+
 
 
 

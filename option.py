@@ -11,3 +11,4 @@ parser.add_argument('--test_mode', type=int, default=0, help='execute in test mo
 parser.add_argument('--db_dir', type=str, default="data/db.sqlite3", help='database path')
 parser.add_argument('--time_step', type=int, default=60, help='time step(sec)')
 parser.add_argument('--network_path', type=str, default="data/Manhattan.graphml", help='network_path')
+parser.add_argument('--max_requests', type=int, default=None, help='network_path')
