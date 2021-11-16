@@ -35,7 +35,7 @@ class Vehicle:
         Args:
 
             - next_time: float, start time of next step.
-            - __time_left: float, time remaining untill next step.
+            - __time_left: float, time remaining until next step.
             - engine: OSMEngine, routing engine.
         """
         if self.__time_left > time_left:
@@ -56,27 +56,22 @@ class Vehicle:
                 if self.__occupancy > 0:
                     self.__serve_time += self.__time_left
 
-                if len(self.__route_event) != 0:
+                if len(self.__route_event) != 0:    # can be removed later.
                     r_id = self.__route_event.popleft()
 
                     if r_id != -1:  # nothing happens when we get to the node.
-                        if type(r_id) != int:
-                            print(self.__location) 
-                            print(self.__history)
-                            print(r_id)
-                            print(self.__requests[r_id[0]].log_info())
-                            raise Exception("gottcha")
-                        request = self.__requests[r_id]
-                        request.update_state()
-
-                        if request.get_state() == 2: 
-                            self.__pick_up(r_id, time_left)
-                        elif request.get_state() == 3:
-                            self.__drop_off(r_id, time_left)
+                        if hasattr(r_id, '__iter__'):   # two or more events happen.
+                            for i in range(len(r_id)):
+                                self.__event(r_id[i], time_left)
+                            if len(set(r_id)) != len(r_id):
+                                raise Exception("duplicate events")
                         else:
-                            raise Exception("invalid request state.")
+                            self.__event(r_id, time_left)
 
                     if self.__state != 0:
+                        if len(self.__route) == 0:
+                            print(self.__capacity, self.__occupancy, **self.__requests)
+                            raise Exception("state doesn't match with route.")
                         self.__location = self.__route.popleft()
                         self.__time_left = self.__route_travel_t.popleft()
 
@@ -128,6 +123,17 @@ class Vehicle:
         self.__record(r_id, request.get_state(), time_left)
         print("vehicle {} and user {} matched".format(self.__v_id, r_id))
 
+    def __event(self, r_id, time_left):
+        request = self.__requests[r_id]
+        request.update_state()
+
+        if request.get_state() == 2:
+            self.__pick_up(r_id, time_left)
+        elif request.get_state() == 3:
+            self.__drop_off(r_id, time_left)
+        else:
+            raise Exception("invalid request state.")
+
     def __pick_up(self, r_id, time_left):
         self.__occupancy += len(self.__requests[r_id])
         self.__record(r_id, self.__requests[r_id].get_state(), time_left)
@@ -177,7 +183,6 @@ class Vehicle:
 
         return candidate_destination
 
-    
     def __record(self, r_id, r_state, time_left):
         self.__history.append({'v_id':self.__v_id, 'r_id': r_id, 'r_state': r_state, 
         'time': int(time_left), 'location':self.__location})

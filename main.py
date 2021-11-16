@@ -1,21 +1,28 @@
 import option
 from common.time_utils import get_local_datetime
-from config.settings import TIMESTEP, db_dir
 from control_unit import ControlUnit
 
-# todo: settings.py + options.py
 if __name__ == '__main__':
     args = option.parser.parse_args()
 
     # time settings
+    test_mode = args.test_mode
     start_time = args.start_time
     current_time = start_time
-    end_time = end_time = start_time + int(60 * 60 * 24 * args.days)
     days = args.days
-    steps = int(3600 * 24 / TIMESTEP)
+    time_step = args.time_step
+    if test_mode:
+        print("<TEST MODE>")
+        end_time = start_time + int(60*60)
+        steps = int(3600/time_step)
+        days = 1
+    else:
+        end_time = start_time + int(60*60*24*args.days)
+        steps = int((3600*24)/time_step)
 
-    control_unit = ControlUnit(current_time=start_time, timestep=TIMESTEP, n_vehicles=args.vehicles,
-                               matching_method=args.method, db_dir=db_dir, save_dir=args.save_dir)
+    control_unit = ControlUnit(current_time=start_time, timestep=time_step, n_vehicles=args.vehicles,
+                               matching_method=args.method, db_dir=args.db_dir, save_dir=args.save_dir,
+                               test_mode=test_mode, network_path=args.network_path)
 
     print("Start: {}".format(get_local_datetime(start_time)))
     print("End  : {}".format(get_local_datetime(end_time)))
@@ -28,5 +35,5 @@ if __name__ == '__main__':
             print("---------------------------------------------------")
             print("Step: {}/{}, Datetime: {}".format(step+1, steps*days, get_local_datetime(current_time)))
             control_unit.step()     # TODO: logger
-            current_time += TIMESTEP
+            current_time += time_step
 

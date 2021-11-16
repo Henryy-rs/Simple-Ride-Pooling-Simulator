@@ -7,15 +7,20 @@ sys.setrecursionlimit(100000)
 
 
 class OSMEngine:
-    def __init__(self):
+    def __init__(self, network_path=None):
         print("Initialize OSM Engine")
-        self.G = ox.graph_from_place("Manhattan,New York USA", network_type="drive")
-        self.G = ox.speed.add_edge_speeds(self.G)
-        self.G = ox.speed.add_edge_travel_times(self.G)
-        self.nodes, self.edges = ox.graph_to_gdfs(self.G)
-        self.dead_end = True
-        self.__remove_dead_end()
-        self.dead_end = False
+        if network_path:
+            self.G = ox.load_graphml(network_path)
+            self.nodes, self.edges = ox.graph_to_gdfs(self.G)
+            self.dead_end = False
+        else:
+            self.G = ox.graph_from_place("Manhattan,New York USA", network_type="drive")
+            self.G = ox.speed.add_edge_speeds(self.G)
+            self.G = ox.speed.add_edge_travel_times(self.G)
+            self.nodes, self.edges = ox.graph_to_gdfs(self.G)
+            self.dead_end = True
+            self.__remove_dead_end()
+            self.dead_end = False
 
     def get_location(self, nid):
         return self.nodes.loc[nid]['y':'x']
@@ -32,13 +37,13 @@ class OSMEngine:
             if self.dead_end:
                 if nid not in self.edges.index.get_level_values('u'):
                     return []
-            adjacent_lst = list(map(lambda x: x[1], self.edges.loc[nid, :, :].index))
+            adjacent_lst = list(map(lambda x: x[-2], self.edges.loc[nid, :, :].index))
         else:
             if self.dead_end:
                 if nid not in self.edges.index.get_level_values('v'):
                     return []
             adjacent_lst = list(map(lambda x: x[0], self.edges.loc[:, nid, :].index))
-            
+
         return adjacent_lst
 
     def get_shortest_route(self, nid_from, nid_to):
@@ -115,12 +120,11 @@ class OSMEngine:
 
         return dead_end[nid]
 
-    def save_network(self):
-        # todo: 모든 경로의 travel time 저장하여 속도 높이기
-        return
+    # TODO: 모든 경로의 travel time 저장하여 속도 높이기
+    def save_network(self, filepath):
+        ox.save_graphml(self.G, filepath)
 
-    def load_network(self):
-        return
+
 
 
 
