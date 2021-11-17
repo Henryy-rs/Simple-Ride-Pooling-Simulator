@@ -11,11 +11,11 @@ def concate_tt_lst(tt_lst1, tt_lst2):
 
 def mark_event(event_lst, r_id, length):
     if length == 1:
-        if len(event_lst) == 1:     # 초기화 상태이면
+        if len(event_lst) == 1 and event_lst[0] == -1:     # 초기화 상태이면
             return [r_id]
         else:   # 경로가 있는데 그 끝에 같은 candidate 이 추가되는 경우면
             if hasattr(event_lst[-1], '__iter__'):
-                event_lst.append(r_id)
+                event_lst[-1].append(r_id)
             else:
                 event_lst[-1] = [event_lst[-1], r_id]
             return event_lst    # 리턴 안해줘도 event list 가 바뀌긴 함

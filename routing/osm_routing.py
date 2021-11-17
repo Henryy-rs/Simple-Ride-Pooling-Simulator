@@ -46,8 +46,8 @@ class OSMEngine:
 
         return adjacent_lst
 
-    def get_shortest_route(self, nid_from, nid_to):
-        return ox.distance.shortest_path(self.G, nid_from, nid_to, weight='travel_time')
+    def get_shortest_route(self, nid_from, nid_to, cpus=None):
+        return ox.distance.shortest_path(self.G, nid_from, nid_to, weight='travel_time', cpus=cpus)
 
     def get_travel_time(self, route, reject_time=None, to_list=False):
         travel_time = [0]
@@ -56,7 +56,7 @@ class OSMEngine:
             for i in range(len(route)-1):
                 nid_from = route[i]
                 nid_to = route[i+1]
-                travel_time.append(self.edges.loc[(nid_from, nid_to, 0)]['travel_time'])
+                travel_time.append(int(self.edges.loc[(nid_from, nid_to, 0)]['travel_time'])+1)
 
                 if sum(travel_time) >= reject_time:
                     return reject_time
@@ -64,7 +64,7 @@ class OSMEngine:
             for i in range(len(route)-1):
                 nid_from = route[i]
                 nid_to = route[i+1]
-                travel_time.append(self.edges.loc[(nid_from, nid_to, 0)]['travel_time'])
+                travel_time.append(int(self.edges.loc[(nid_from, nid_to, 0)]['travel_time'])+1)
 
         if to_list:
             return travel_time
@@ -124,11 +124,11 @@ class OSMEngine:
     def save_network(self, filepath):
         ox.save_graphml(self.G, filepath)
 
-    def compute_all(self):
-        return
-
-
-
+    def node_index(self):
+        node_index = {}
+        for index, nid in enumerate(self.nodes.index):
+            node_index[nid] = index
+        return node_index
 
 
 

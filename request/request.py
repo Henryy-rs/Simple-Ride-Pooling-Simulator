@@ -47,7 +47,7 @@ class Request:
         return self.best_trip_time
 
     def log_info(self):
-        print("r_id: {}, origin: {}, destination: {}".format(self.id, self.origin, self.destination))
+        print("r_id: {}, r_state: {}, origin: {}, destination: {}".format(self.id, self.state, self.origin, self.destination))
 
 
 

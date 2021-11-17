@@ -37,7 +37,7 @@ class Vehicle:
             - engine: OSMEngine, routing engine.
         """
 
-        if self.__time_left > time_left:
+        if self.__time_left >= time_left:
             if self.__occupancy != 0:
                 self.__serve_time += time_left
             self.__time_left -= time_left
@@ -67,12 +67,12 @@ class Vehicle:
                         self.__event(r_id, time_left)
 
                 if self.__state != 0:
-                    if len(self.__route) == 0:
-                        print(self.__capacity, self.__occupancy)
-                        map(lambda x: x.log_info(), *self.__requests)
-                        raise Exception("state doesn't match with route.")
-                    else:
+                    if time_left != 0:
                         self.__location, self.__time_left = self.__route.pop_next()
+                    else:
+                        self.__time_left = 0
+                else:
+                    self.__time_left = 0
 
                 self.update_location(time_left, engine)
 

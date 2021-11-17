@@ -72,8 +72,9 @@ class Recorder:
         self.r_df = pd.concat([self.r_df, tmp_df], axis=0)
 
     def print(self):
-        print(self.v_df.head(50))
-        print(self.r_df.head(50))
+        print("---------------------------------------------------")
+        print(self.v_df.mean())
+        print(self.r_df.mean())
         print(self.sys_metrics)
 
 

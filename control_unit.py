@@ -64,9 +64,6 @@ class ControlUnit:
         # TODO: add throughput
         self.recorder.put_metrics(self.current_step, vehicles=False, accept_rate=accept_rate)
         self.__filter_requests(requests)
-        # print(self.recorder.df)
-        # print(self.recorder.v_df)
-        # print(self.recorder.sys_metrics)
             
     def manage_request(self, r_id):
         self.r_ids_to_add.append(r_id)
