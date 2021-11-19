@@ -11,12 +11,24 @@ class OSMEngine:
         print("Initialize OSM Engine")
         if network_path:
             self.G = ox.load_graphml(network_path)
+            self.mapping = {}
+
+            for i, node in enumerate(self.G.edges):
+                self.mapping[i] = node
+
+            self.G = nx.relabel.convert_node_labels_to_integers(self.G, label_attribute=int)
             self.nodes, self.edges = ox.graph_to_gdfs(self.G)
             self.dead_end = False
         else:
             self.G = ox.graph_from_place("Manhattan,New York USA", network_type="drive")
+            self.mapping = {}
+
+            for i, node in enumerate(self.G.edges):
+                self.mapping[i] = node
+
             self.G = ox.speed.add_edge_speeds(self.G)
             self.G = ox.speed.add_edge_travel_times(self.G)
+            self.G = nx.relabel.convert_node_labels_to_integers(self.G, label_attribute=int)
             self.nodes, self.edges = ox.graph_to_gdfs(self.G)
             self.dead_end = True
             self.__remove_dead_end()
@@ -129,6 +141,7 @@ class OSMEngine:
         for index, nid in enumerate(self.nodes.index):
             node_index[nid] = index
         return node_index
+
 
 
 
