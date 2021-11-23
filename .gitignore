@@ -1,5 +1,6 @@
 data/db.sqlite3
 data/paths/
+data/paths.pickle
 .idea/
 __pycache__/
 cache/

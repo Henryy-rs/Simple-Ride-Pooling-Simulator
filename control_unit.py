@@ -3,12 +3,11 @@ from vehicle.vehicle import Vehicle
 from algorithm import matcing, routing
 from request.request_loader import RequestLoader
 from record.recorder import Recorder
-from multiprocessing import Process
 
 
 class ControlUnit:
     def __init__(self, current_time, timestep, n_vehicles, matching_method, db_dir, save_dir, num_workers=0,
-                 test_mode=False, network_path=None):
+                 test_mode=False, network_path=None, paths=""):
         self.test_mode = test_mode
         self.timestep = timestep
         self.current_time = current_time
@@ -19,7 +18,7 @@ class ControlUnit:
         self.requests = {}
         self.step_requests = {}
         self.r_ids_to_add = []
-        self.engine = OSMEngine(network_path=network_path)
+        self.engine = OSMEngine(network_path=network_path, paths=paths)
         self.request_loader = RequestLoader(db_dir=db_dir)
         self.recorder = Recorder(save_dir=save_dir)
         self.num_workers = num_workers
@@ -38,8 +37,7 @@ class ControlUnit:
         self.__match(self.step_requests)
         self.__update_vehicles_locations()
         self.__gather_records(self.step_requests)
-        self.current_time += self.timestep
-        self.current_step += 1
+        self.__update_time()
 
     def __update_vehicles_locations(self):
         print("update location...")
@@ -83,6 +81,10 @@ class ControlUnit:
         for r_id in self.r_ids_to_add:
             self.requests[r_id] = requests[r_id]
         self.r_ids_to_add.clear()
+
+    def __update_time(self):
+        self.current_time += self.timestep
+        self.current_step += 1
 
     def print(self):
         self.recorder.print()

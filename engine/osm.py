@@ -1,24 +1,25 @@
+import os.path
 import networkx as nx
 import osmnx as ox
 import numpy as np
+import pickle
 import sys
+
 
 sys.setrecursionlimit(100000)
 
 
 class OSMEngine:
-    def __init__(self, network_path=None):
+    def __init__(self, network_path=None, paths=""):
         print("Initialize OSM Engine")
         if network_path:
             self.G = ox.load_graphml(network_path)
-            self.mapping = {}
             self.__map()
             self.G = nx.relabel.convert_node_labels_to_integers(self.G, label_attribute=int)
             self.nodes, self.edges = ox.graph_to_gdfs(self.G)
             self.dead_end = False
         else:
             self.G = ox.graph_from_place("Manhattan,New York USA", network_type="drive")
-            self.mapping = {}
             self.__map()
             self.G = ox.speed.add_edge_speeds(self.G)
             self.G = ox.speed.add_edge_travel_times(self.G)
@@ -27,6 +28,10 @@ class OSMEngine:
             self.dead_end = True
             self.__remove_dead_end()
             self.dead_end = False
+        self.shortest_paths = None
+        if os.path.exists(paths):
+            with open(paths, "rb") as f:
+                self.shortest_paths = pickle.load(f)
 
     def get_location(self, nid):
         return self.nodes.loc[nid]['y':'x']
@@ -78,9 +83,20 @@ class OSMEngine:
             return sum(travel_time)
 
     def get_shortest_travel_time(self, nid_from, nid_to, return_route=False, to_list=False, reject_time=None):
-        route = self.get_shortest_route(nid_from, nid_to)
-        travel_time = self.get_travel_time(route, reject_time=reject_time, to_list=to_list)
-
+        if self.shortest_paths:
+            route = [nid_from]
+            travel_time = [0]
+            prev_nid = nid_from
+            while prev_nid != nid_to:
+                next_nid, time = self.shortest_paths[prev_nid][nid_to]
+                route.append(next_nid)
+                travel_time.append(time)
+                prev_nid = next_nid
+            if not to_list:
+                travel_time = sum(travel_time)
+        else:
+            route = self.get_shortest_route(nid_from, nid_to)
+            travel_time = self.get_travel_time(route, reject_time=reject_time, to_list=to_list)
         if return_route:
             return travel_time, route
         return travel_time
@@ -131,6 +147,7 @@ class OSMEngine:
         ox.save_graphml(self.G, filepath)
 
     def __map(self):
+        self.mapping = {}
         for i, node in enumerate(self.G.edges):
             self.mapping[i] = node
 

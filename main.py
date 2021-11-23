@@ -1,6 +1,7 @@
 import option
 from common.time_utils import get_local_datetime
 from control_unit import ControlUnit
+import time
 
 if __name__ == '__main__':
     args = option.parser.parse_args()
@@ -11,6 +12,7 @@ if __name__ == '__main__':
     current_time = start_time
     days = args.days
     time_step = args.time_step
+    check_start = time.time()
     if test_mode:
         print("<TEST MODE>")
         end_time = start_time + int(60*60)
@@ -22,7 +24,7 @@ if __name__ == '__main__':
 
     control_unit = ControlUnit(current_time=start_time, timestep=time_step, n_vehicles=args.vehicles,
                                matching_method=args.method, db_dir=args.db_dir, save_dir=args.save_dir,
-                               test_mode=test_mode, network_path=args.network_path)
+                               test_mode=test_mode, network_path=args.network_path, paths=args.paths)
 
     print("Start: {}".format(get_local_datetime(start_time)))
     print("End  : {}".format(get_local_datetime(end_time)))
@@ -39,4 +41,6 @@ if __name__ == '__main__':
             current_time += time_step
 
     control_unit.print()
+    print("run for {}s".format(int(time.time()-check_start)))
+
 

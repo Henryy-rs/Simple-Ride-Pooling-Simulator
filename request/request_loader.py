@@ -34,9 +34,6 @@ class RequestLoader:
             if self.test_mode:
                 if len(requests) >= 60:
                     break
-            else:
-                if len(requests) >= 40:
-                    break
 
         print("{} requests loaded, {} are invalid".format(len(requests), n_invalid))
         self.requests = requests
