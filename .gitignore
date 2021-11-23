@@ -1,4 +1,5 @@
 data/db.sqlite3
+data/paths/
 .idea/
 __pycache__/
 cache/

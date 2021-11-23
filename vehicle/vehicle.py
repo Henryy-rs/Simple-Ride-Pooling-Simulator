@@ -1,6 +1,4 @@
 import numpy as np
-from collections import deque
-from routing.route import Route
 
 
 class Vehicle:
@@ -16,8 +14,8 @@ class Vehicle:
         self.__location = engine.generate_random_node()
         self.__time_left = 0
 
-        # route expression
-        self.__route = Route()
+        # route expression (algorithm.routing.Route)
+        self.__route = None
 
         # state expression
         self.__capacity = self.__max_capacity
@@ -34,7 +32,7 @@ class Vehicle:
 
             - next_time: float, start time of next step.
             - __time_left: float, time remaining until next step.
-            - engine: OSMEngine, routing engine.
+            - engine: OSMEngine, engine engine.
         """
 
         if self.__time_left >= time_left:
@@ -146,11 +144,8 @@ class Vehicle:
         self.__record(r_id, request.get_state(), time_left)
         print("vehicle {} drops off user {}".format(self.__v_id, r_id))
 
-    def set_plan(self, route, route_travel_t, route_event):
-        self.__route.push(route, route_travel_t, route_event)
-
-        # event 는 노드에 도착했을 때 pop한다. 따라서 state가 1이나 2면 event는 항상 남아있어야 한다.
-        # __time_left 는 변경하지 않아도 된다. travel deq 안의 첫 시간은 항상 0이다.
+    def set_route(self, route):
+        self.__route = route
 
     # 현재 보유중인 request 상황을 참고하여 가능한 다음 목적지를 반환
     def get_candidests(self):

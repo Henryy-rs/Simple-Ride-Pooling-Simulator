@@ -1,6 +1,6 @@
-from routing.osm_routing import OSMEngine
+from engine.osm import OSMEngine
 from vehicle.vehicle import Vehicle
-from algorithm import matcing_policy
+from algorithm import matcing, routing
 from request.request_loader import RequestLoader
 from record.recorder import Recorder
 from multiprocessing import Process
@@ -50,7 +50,8 @@ class ControlUnit:
 
     def __match(self, requests):
         if self.matching_method == "greedy":
-            matcing_policy.greedy_matching(requests, self.vehicles, self.timestep, engine=self.engine)
+            matcing.greedy_matching(requests, self.vehicles, self.timestep, engine=self.engine)
+            routing.greedy_routing(self.vehicles, self.timestep, engine=self.engine)
 
     def __gather_records(self, requests):
         for v_id, vehicle in self.vehicles.items():
