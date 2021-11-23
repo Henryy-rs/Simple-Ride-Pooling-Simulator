@@ -19,7 +19,7 @@ algorithms.
     
     python main.py
 
-    ```
+ ```
 
 # todo
 
