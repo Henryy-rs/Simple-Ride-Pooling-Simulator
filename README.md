@@ -21,7 +21,7 @@ algorithms.
 
  ```
 
-## todo
+## TODO
 
 - logger
 - visualization
