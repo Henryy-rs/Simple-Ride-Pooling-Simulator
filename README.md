@@ -11,7 +11,7 @@ you can get paths.pickle by running generate_pickle.py but it will takes more th
 Ride-pooling simulator for evaluating matching and routing
 algorithms.
 
-# Usage
+## Usage
 
  ```bash
  
@@ -21,7 +21,7 @@ algorithms.
 
  ```
 
-# todo
+## todo
 
 - logger
 - visualization
