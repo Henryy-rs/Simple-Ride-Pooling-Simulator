@@ -13,4 +13,5 @@ algorithms.
 # todo
 
 - logger
+- visualization
 - implement a new algorithm ~ 11.xx
