@@ -1,7 +1,7 @@
 # Simple-Ride-Pooling-Simulator
 
-Ride-pooling simulator for evaluating matching and routing
-algorithms.
+<b>Ride-pooling simulator for evaluating matching and routing
+algorithms.</b>
 
 request data:
 https://drive.google.com/file/d/1UzVdbA3cSsC22pHTSUliq5ORgm6LB7Rd/view?usp=sharing
