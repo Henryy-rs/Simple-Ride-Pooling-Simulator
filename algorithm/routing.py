@@ -38,9 +38,6 @@ class Route:
         else:
             raise Exception("No route to split. route is empty.")
 
-    def print_event(self):
-        print(self.__events)
-
 
 class Router(metaclass=ABCMeta):
     def __init__(self, timestep, engine):
@@ -144,9 +141,6 @@ class InsertionRouter(Router):
         if vehicle.get_state() == 0:
             return
         route, travel_times, events = self.plan_route(vehicle)
-        # print("route:", route)
-        # print("travel_time:", travel_times)
-        # print("events: ", events)
         combined_route = Route()
         combined_route.push(route, travel_times, events)
         vehicle.set_route(combined_route)
@@ -156,13 +150,11 @@ class InsertionRouter(Router):
         candidates = vehicle.get_candidests(only_new_requests=True)
         combined_route = vehicle.get_route()
 
-        if len(combined_route) == 0:    # if this condition is True, Vehicle has no route plan.
+        if len(combined_route) == 0:    # if vehicle has no route plan
             candidate = candidates.pop()
             origin = candidate['origin']
             destination = candidate['destination']
             request_id = candidate['r_id']
-            assert origin != destination, "request error"
-
             # current vehicle's location -> origin -> destination
             route, travel_times, events = self.__concat_shortest_route(*self.init_route(), v_node_id, origin, request_id)
             route, travel_times, events = self.__concat_shortest_route(route, travel_times, events, origin, destination, request_id)
@@ -175,90 +167,63 @@ class InsertionRouter(Router):
             request_id = candidate['r_id']
             start_index = 0      # start_index: search from start_index
 
-            # insert origin first.
-            start_offset, end_offset = self.__find_best_place_to_insert(route, events, start_index=start_index,
-                                                                        node_id_to_insert=destination)
+            # insert origin
+            route, travel_times, events, start_index = self.__insert_event(route, travel_times, events,
+                                                                           request_id, origin, start_index)
 
-            if not end_offset:
-                # concat at the end (end_node -> origin -> destination)
-                end_node_id = route[-1]
-                route, travel_times, events = self.__concat_shortest_route(route, travel_times, events, end_node_id, origin, request_id)
-                start_index = len(route) - 1
-
-            elif start_offset == end_offset:
-                # It means, no need to change route. Just append event in the current route.
-                events[start_offset].append(request_id)
-                start_index = start_offset
-
-            else:
-                from_node_id = route[start_offset]
-                to_node_id = route[end_offset]
-
-                route_to_insert, travel_times_to_insert, events_to_insert = \
-                    self.__concat_shortest_route(*self.init_route(), from_node_id, origin, request_id)
-
-                start_index = start_offset + len(route_to_insert) - 1   # index of origin
-
-                route_to_insert, travel_times_to_insert, events_to_insert = \
-                    self.__concat_shortest_route(route_to_insert, travel_times_to_insert, events_to_insert,
-                                                 origin, to_node_id, events[end_offset])
-
-                if end_offset == len(route) - 1:
-                    route = route[:start_offset+1] + route_to_insert[1:]
-                    travel_times = travel_times[:start_offset+1] + travel_times_to_insert[1:]
-                    events = events[:start_offset+1] + events_to_insert[1:]
-                else:
-                    route = route[:start_offset+1] + route_to_insert[1:] + route[end_offset+1:]
-                    travel_times = travel_times[:start_offset+1] + travel_times_to_insert[1:] + travel_times[end_offset+1:]
-                    events = events[:start_offset+1] + events_to_insert[1:] + events[end_offset+1:]
-
-            if request_id not in events[start_index]:
-                print(request_id)
-                print(events[start_index])
-                print(events)
-                raise Exception("invalid start_index")
+            assert request_id in events[start_index], "invalid start_index"
 
             # insert destination
-            start_offset, end_offset = self.__find_best_place_to_insert(route, travel_times, start_index=start_index,
-                                                                        node_id_to_insert=destination)
-            if not end_offset:
-                # concat at the end (end_node -> origin -> destination)
-                end_node_id = route[-1]
-                route, travel_times, events = self.__concat_shortest_route(route, travel_times, events, end_node_id, destination, request_id)
-
-            elif start_offset == end_offset:
-                # It means, no need to change route. Just append event in the current route.
-                events[start_offset].append(request_id)
-
-            else:
-                from_node_id = route[start_offset]
-                to_node_id = route[end_offset]
-
-                route_to_insert, travel_times_to_insert, events_to_insert = \
-                    self.__concat_shortest_route(*self.init_route(), from_node_id, destination, request_id)
-
-                assert events[end_offset] != []
-
-                route_to_insert, travel_times_to_insert, events_to_insert = \
-                    self.__concat_shortest_route(route_to_insert, travel_times_to_insert, events_to_insert,
-                                                 destination, to_node_id, events[end_offset])
-
-                if end_offset == len(route) - 1:
-                    route = route[:start_offset+1] + route_to_insert[1:]
-                    travel_times = travel_times[:start_offset+1] + travel_times_to_insert[1:]
-                    events = events[:start_offset+1] + events_to_insert[1:]
-                else:
-                    route = route[:start_offset+1] + route_to_insert[1:] + route[end_offset+1:]
-                    travel_times = travel_times[:start_offset+1] + travel_times_to_insert[1:] + travel_times[end_offset+1:]
-                    events = events[:start_offset+1] + events_to_insert[1:] + events[end_offset+1:]
+            route, travel_times, events, start_index = self.__insert_event(route, travel_times, events,
+                                                                           request_id, destination, start_index)
 
         return route, travel_times, events
 
-    def __insert_request(self):
-        return
+    def __insert_event(self, route, travel_times, events, request_id, node_id_to_insert, start_index):
+        start_offset, end_offset = self.__find_best_place_to_insert(route, events, start_index=start_index,
+                                                                    node_id_to_insert=node_id_to_insert)
+        if not end_offset:
+            # concat at the end (end_node -> origin -> destination)
+            end_node_id = route[-1]
+            route, travel_times, events = self.__concat_shortest_route(route, travel_times, events, end_node_id,
+                                                                       node_id_to_insert, request_id)
+            start_index = len(route) - 1
+
+        elif start_offset == end_offset:
+            # It means, no need to change route. Just append the event in a current route.
+            events[start_offset].append(request_id)
+            start_index = start_offset
+
+        else:
+            from_node_id = route[start_offset]
+            to_node_id = route[end_offset]
+
+            route_to_insert, travel_times_to_insert, events_to_insert = \
+                self.__concat_shortest_route(*self.init_route(), from_node_id, node_id_to_insert, request_id)
+
+            start_index = start_offset + len(route_to_insert) - 1  # index of origin
+
+            route_to_insert, travel_times_to_insert, events_to_insert = \
+                self.__concat_shortest_route(route_to_insert, travel_times_to_insert, events_to_insert,
+                                             node_id_to_insert, to_node_id, events[end_offset])
+
+            if end_offset == len(route) - 1:
+                route = route[:start_offset+1] + route_to_insert[1:]
+                travel_times = travel_times[:start_offset+1] + travel_times_to_insert[1:]
+                events = events[:start_offset+1] + events_to_insert[1:]
+            else:
+                route = route[:start_offset+1] + route_to_insert[1:] + route[end_offset+1:]
+                travel_times = travel_times[:start_offset+1] + travel_times_to_insert[1:] + travel_times[end_offset + 1:]
+                events = events[:start_offset+1] + events_to_insert[1:] + events[end_offset + 1:]
+
+        return route, travel_times, events, start_index
 
     def __find_best_place_to_insert(self, route, events, start_index, node_id_to_insert):
-        assert len(route) == len(events), "Invalid inputs."
+        for i in range(start_index, len(route)):
+            if route[i] == node_id_to_insert:
+                start_offset = i
+                end_offset = i
+                return start_offset, end_offset
 
         events_idx = []
         additional_times = []
@@ -268,7 +233,6 @@ class InsertionRouter(Router):
 
         for i in range(start_index+1, len(events)):
             if events[i]:
-                #print(events[i])
                 events_idx.append(i)
 
         for offset in events_idx:
@@ -287,9 +251,6 @@ class InsertionRouter(Router):
                 min_additional_time = additional_time
                 min_start_offset = start_offset
                 min_end_offset = end_offset
-
-        if min_additional_time == 0:
-            min_end_offset = min_start_offset
 
         return min_start_offset, min_end_offset
 

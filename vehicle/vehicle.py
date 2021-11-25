@@ -54,11 +54,9 @@ class Vehicle:
                 if self.__occupancy > 0:
                     self.__serve_time += self.__time_left
 
-                self.__route.print_event()
                 events = self.__route.pop_event()
 
                 for r_id in events:
-                    print(r_id)
                     self.__event(r_id, time_left)
 
                 if self.__state != 0:
@@ -117,7 +115,6 @@ class Vehicle:
         print("vehicle {} and user {} matched".format(self.__v_id, r_id))
 
     def __event(self, r_id, time_left):
-        print(type(self.__requests))
         request = self.__requests[r_id]
         request.update_state()
 
