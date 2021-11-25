@@ -1,27 +1,38 @@
 from engine.osm import OSMEngine
 from vehicle.vehicle import Vehicle
 from algorithm import matcing, routing
+from algorithm.routing import *
 from request.request_loader import RequestLoader
 from record.recorder import Recorder
 
 
 class ControlUnit:
-    def __init__(self, current_time, timestep, n_vehicles, matching_method, db_dir, save_dir, num_workers=0,
+    def __init__(self, current_time, timestep, n_vehicles, matching_method, routing_method, db_dir, save_dir, num_workers=0,
                  test_mode=False, network_path=None, paths=""):
         self.test_mode = test_mode
         self.timestep = timestep
         self.current_time = current_time
         self.current_step = 1
         self.n_vehicles = n_vehicles
-        self.matching_method = matching_method
         self.vehicles = {}
         self.requests = {}
         self.step_requests = {}
-        self.r_ids_to_add = []
+        self.step_r_ids_accepted = []
         self.engine = OSMEngine(network_path=network_path, paths=paths)
         self.request_loader = RequestLoader(db_dir=db_dir)
         self.recorder = Recorder(save_dir=save_dir)
         self.num_workers = num_workers
+        self.__generate_commander(matching_method, routing_method)
+
+    def __generate_commander(self, matching_method, routing_method):
+        if matching_method == "greedy":
+            self.matcher = None
+        if routing_method == "greedy":
+            self.router = GreedyRouter(self.timestep, self.engine)
+        elif routing_method == "insertion":
+            self.router = InsertionRouter(self.timestep, self.engine)
+        else:
+            raise Exception("There is no routing method '{}'".format(matching_method))
 
     def dispatch_vehicles(self):
         print("dispatch...", end="\t")
@@ -35,6 +46,7 @@ class ControlUnit:
     def step(self):
         self.step_requests = self.request_loader.iter_request(self.current_time, self.timestep, engine=self.engine)
         self.__match(self.step_requests)
+        self.__route()
         self.__update_vehicles_locations()
         self.__gather_records(self.step_requests)
         self.__update_time()
@@ -47,9 +59,12 @@ class ControlUnit:
         print("finished")
 
     def __match(self, requests):
-        if self.matching_method == "greedy":
-            matcing.greedy_matching(requests, self.vehicles, self.timestep, engine=self.engine)
-            routing.greedy_routing(self.vehicles, self.timestep, engine=self.engine)
+        matcing.greedy_matching(requests, self.vehicles, self.timestep, engine=self.engine)
+        # routing.greedy_routing(self.vehicles, self.timestep, engine=self.engine)
+
+    def __route(self):
+        for vehicle in self.vehicles.values():
+            self.router.set_vehicle_route(vehicle)
 
     def __gather_records(self, requests):
         for v_id, vehicle in self.vehicles.items():
@@ -65,28 +80,28 @@ class ControlUnit:
         self.__filter_requests(requests)
             
     def manage_request(self, r_id):
-        self.r_ids_to_add.append(r_id)
+        self.step_r_ids_accepted.append(r_id)
 
     def release_request(self, r_id):
         if r_id in self.requests:
             return self.requests.pop(r_id)
         else:
-            self.r_ids_to_add.remove(r_id)
+            self.step_r_ids_accepted.remove(r_id)
             return self.step_requests[r_id]
 
     def __get_n_matched(self):
-        return len(self.r_ids_to_add)
+        return len(self.step_r_ids_accepted)
 
     def __filter_requests(self, requests):
-        for r_id in self.r_ids_to_add:
+        for r_id in self.step_r_ids_accepted:
             self.requests[r_id] = requests[r_id]
-        self.r_ids_to_add.clear()
+        self.step_r_ids_accepted.clear()
 
     def __update_time(self):
         self.current_time += self.timestep
         self.current_step += 1
 
-    def print(self):
+    def print_result(self):
         self.recorder.print()
 
 

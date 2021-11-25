@@ -1,26 +1,29 @@
-import numpy as np
-
-
-def concate_route(lst1, lst2):
+def concat_routes(lst1, lst2):
     lst1.pop()
     return lst1 + lst2
 
-def concate_tt_lst(tt_lst1, tt_lst2):
+
+def concat_travel_times(tt_lst1, tt_lst2):
     tt_lst2.pop(0)
     return tt_lst1 + tt_lst2
 
+
 def mark_event(event_lst, r_id, length):
-    if length == 1:
-        if len(event_lst) == 1 and event_lst[0] == -1:     # 초기화 상태이면
-            return [r_id]
-        else:   # 경로가 있는데 그 끝에 같은 candidate 이 추가되는 경우면
-            if hasattr(event_lst[-1], '__iter__'):
-                event_lst[-1].append(r_id)
-            else:
-                event_lst[-1] = [event_lst[-1], r_id]
-            return event_lst    # 리턴 안해줘도 event list 가 바뀌긴 함
+    assert r_id != [], "invalid request_id"
+    assert length >= 1 and type(length) == int, "invalid length"
+
+    if length >= 2:
+        for i in range(length-1):
+            event_lst.append([])
+
+    if hasattr(r_id, '__iter__'):
+        for r_id_ in r_id:
+            event_lst[-1].append(r_id_)
     else:
-        return event_lst + [-1] * (length - 2) + [r_id]
+        event_lst[-1].append(r_id)
+
+    return event_lst
+
 
 
 

@@ -1,12 +1,14 @@
 import numpy as np
+from algorithm.routing import Route
 
 
 class Vehicle:
-    __max_capacity = 8
+    __max_capacity = 6
 
     def __init__(self, v_id, engine):
         self.__v_id = v_id
         self.__requests = {}
+        self.__new_requests = {}
         self.__serve_time = 0
         self.__history = []
 
@@ -14,8 +16,8 @@ class Vehicle:
         self.__location = engine.generate_random_node()
         self.__time_left = 0
 
-        # route expression (algorithm.routing.Route)
-        self.__route = None
+        # route expression
+        self.__route = Route()
 
         # state expression
         self.__capacity = self.__max_capacity
@@ -34,7 +36,6 @@ class Vehicle:
             - __time_left: float, time remaining until next step.
             - engine: OSMEngine, engine engine.
         """
-
         if self.__time_left >= time_left:
             if self.__occupancy != 0:
                 self.__serve_time += time_left
@@ -53,20 +54,16 @@ class Vehicle:
                 if self.__occupancy > 0:
                     self.__serve_time += self.__time_left
 
-                r_id = self.__route.pop_event()
+                self.__route.print_event()
+                events = self.__route.pop_event()
 
-                if r_id != -1:
-                    if hasattr(r_id, '__iter__'):   # two or more events happen.
-                        for i in range(len(r_id)):
-                            self.__event(r_id[i], time_left)
-                        if len(set(r_id)) != len(r_id):
-                            raise Exception("duplicate events")
-                    else:
-                        self.__event(r_id, time_left)
+                for r_id in events:
+                    print(r_id)
+                    self.__event(r_id, time_left)
 
                 if self.__state != 0:
                     if time_left != 0:
-                        self.__location, self.__time_left = self.__route.pop_next()
+                        self.__location, self.__time_left = self.__route.pop_next_location()
                     else:
                         self.__time_left = 0
                 else:
@@ -90,7 +87,7 @@ class Vehicle:
     def get_location(self):
         return self.__location, self.__time_left
 
-    def can_en_route(self, request):
+    def is_rideable(self, request):
         n = len(request)    # number of passengers
         assert type(n) == int and n >= 0, "unexpected input."
 
@@ -99,14 +96,16 @@ class Vehicle:
         else:
             return False
 
-    def en_route(self, request, time_left):
+    def join(self, request, time_left):
         r_state = request.get_state()
         r_id = request.get_id()
 
         assert r_state == 0, "__state doesn't match."
 
         request.update_state()    # waiting state
+
         self.__requests[r_id] = request
+        self.__new_requests[r_id] = request
         self.__capacity -= len(request)
 
         if self.__capacity == 0:
@@ -118,6 +117,7 @@ class Vehicle:
         print("vehicle {} and user {} matched".format(self.__v_id, r_id))
 
     def __event(self, r_id, time_left):
+        print(type(self.__requests))
         request = self.__requests[r_id]
         request.update_state()
 
@@ -146,9 +146,13 @@ class Vehicle:
 
     def set_route(self, route):
         self.__route = route
+        self.__new_requests = {}
+
+    def get_route(self):
+        return self.__route
 
     # 현재 보유중인 request 상황을 참고하여 가능한 다음 목적지를 반환
-    def get_candidests(self):
+    def get_candidests(self, only_new_requests=False):
         """
         get_candidests
         ===============
@@ -157,19 +161,24 @@ class Vehicle:
         """
         candidate_destination = []
 
-        for r_id, request in self.__requests.items():
+        if only_new_requests:
+            requests = self.__new_requests
+        else:
+            requests = self.__requests
+
+        for r_id, request in requests.items():
             r_state = request.get_state()
 
             assert r_state == 1 or 2
 
             candidate_destination.append({'r_id': r_id, 'r_state': r_state, 'origin': request.get_origin(),
-             'destination': request.get_destination()})
+                                          'destination': request.get_destination()})
 
         return candidate_destination
 
     def __record(self, r_id, r_state, time_left):
-        self.__history.append({'v_id':self.__v_id, 'r_id': r_id, 'r_state': r_state, 
-        'time': int(time_left), 'location':self.__location})
+        self.__history.append({'v_id': self.__v_id, 'r_id': r_id, 'r_state': r_state,
+                               'time': int(time_left), 'location': self.__location})
    
     def send_event_history(self):
         history = self.__history.copy()

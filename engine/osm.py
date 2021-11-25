@@ -142,7 +142,6 @@ class OSMEngine:
 
         return dead_end[nid]
 
-    # TODO: 모든 경로의 travel time 저장하여 속도 높이기
     def save_network(self, filepath):
         ox.save_graphml(self.G, filepath)
 

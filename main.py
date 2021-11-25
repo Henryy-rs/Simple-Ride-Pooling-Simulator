@@ -23,7 +23,8 @@ if __name__ == '__main__':
         steps = int((3600*24)/time_step)
 
     control_unit = ControlUnit(current_time=start_time, timestep=time_step, n_vehicles=args.vehicles,
-                               matching_method=args.method, db_dir=args.db_dir, save_dir=args.save_dir,
+                               matching_method=args.matching_method, routing_method=args.routing_method,
+                               db_dir=args.db_dir, save_dir=args.save_dir,
                                test_mode=test_mode, network_path=args.network_path, paths=args.paths)
 
     print("Start: {}".format(get_local_datetime(start_time)))
@@ -40,7 +41,7 @@ if __name__ == '__main__':
             step += 1
             current_time += time_step
 
-    control_unit.print()
+    control_unit.print_result()
     print("run for {}s".format(int(time.time()-check_start)))
 
 
