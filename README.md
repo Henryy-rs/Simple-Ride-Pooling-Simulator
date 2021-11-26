@@ -22,7 +22,12 @@ you can get paths.pickle by running generate_pickle.py but it will takes more th
     python main.py
 
  ```
-
+ 
+ options
+ 
+ ```bash
+ python main.py --routing_method insertion --vehicles 1000
+ ```
 ## TODO
 
 - logger
