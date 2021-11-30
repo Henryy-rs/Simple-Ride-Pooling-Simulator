@@ -101,6 +101,10 @@ class OSMEngine:
             return travel_time, route
         return travel_time
 
+    def get_node_coordinate(self, nid):
+        y, x = self.nodes.loc[nid, ['y', 'x']]
+        return y, x
+
     def __remove_dead_end(self):
         print("remove dead end...", end="\t")
         start_nid = self.nodes.index[0]     # must not be dead end

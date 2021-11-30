@@ -1,13 +1,14 @@
 from engine.osm import OSMEngine
 from vehicle.vehicle import Vehicle
-from algorithm import matcing, routing
 from algorithm.routing import *
+from algorithm.matcing import *
 from request.request_loader import RequestLoader
 from record.recorder import Recorder
+from multiprocessing import Pool
 
 
 class ControlUnit:
-    def __init__(self, current_time, timestep, n_vehicles, matching_method, routing_method, db_dir, save_dir, num_workers=0,
+    def __init__(self, current_time, timestep, n_vehicles, matching_method, routing_method, db_dir, save_dir, num_workers=1,
                  test_mode=False, network_path=None, paths=""):
         self.test_mode = test_mode
         self.timestep = timestep
@@ -26,7 +27,7 @@ class ControlUnit:
 
     def __generate_commander(self, matching_method, routing_method):
         if matching_method == "greedy":
-            self.matcher = None
+            self.matcher = GreedyMatcher(self.timestep, self.engine)
         if routing_method == "greedy":
             self.router = GreedyRouter(self.timestep, self.engine)
         elif routing_method == "insertion":
@@ -48,6 +49,10 @@ class ControlUnit:
         self.__match(self.step_requests)
         self.__route()
         self.__update_vehicles_locations()
+        # with Pool(self.num_workers) as p:
+        #     p.apply(self.__route(), ())
+        #     p.apply(self.__update_vehicles_locations(), ())
+        #     p.join()
         self.__gather_records(self.step_requests)
         self.__update_time()
 
@@ -59,8 +64,7 @@ class ControlUnit:
         print("finished")
 
     def __match(self, requests):
-        matcing.greedy_matching(requests, self.vehicles, self.timestep, engine=self.engine)
-        # routing.greedy_routing(self.vehicles, self.timestep, engine=self.engine)
+        self.matcher.match(requests, self.vehicles)
 
     def __route(self):
         for vehicle in self.vehicles.values():
