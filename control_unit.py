@@ -28,6 +28,9 @@ class ControlUnit:
     def __generate_commander(self, matching_method, routing_method):
         if matching_method == "greedy":
             self.matcher = GreedyMatcher(self.timestep, self.engine)
+        elif matching_method == "radian":
+            self.matcher = RadianMatcher(self.timestep, self.engine)
+
         if routing_method == "greedy":
             self.router = GreedyRouter(self.timestep, self.engine)
         elif routing_method == "insertion":

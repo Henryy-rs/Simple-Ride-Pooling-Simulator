@@ -1,5 +1,7 @@
 import numpy as np
+from math import pi
 from abc import *
+from common import geo_utils
 
 
 class Matcher(metaclass=ABCMeta):
@@ -35,17 +37,49 @@ class GreedyMatcher(Matcher):
 
 
 class RadianMatcher(Matcher):
+    accept_range = 500
+    accept_radian = pi/4
+    k = 2
+    base_distance = k * accept_range * np.sin(accept_radian)
+
     def match(self, requests, vehicles):
         for v_id, vehicle in vehicles.items():
+            v_nid, v_time_left = vehicle.get_location()
+            v_lat, v_lon = self.engine.get_latlon(v_nid)
+
             for r_id, request in requests.items():
-                # request 의 origin 이 range 안에 있는지 체크
-                # 위를 만족하면, request 의 destination 이 (각도를 이용한)범위 안에 있는지 체크
-                # 범위에 있는지 어떻게 체크할 것인가?
-                pass
+                if request.get_state() != 0 or not vehicle.is_rideable(request):
+                    continue
 
-        return
+                o_lat, o_lon = self.engine.get_latlon(request.get_origin())
+                distance = geo_utils.great_circle_distance(v_lat, v_lon, o_lat, o_lon)
 
+                if distance > self.accept_range:
+                    continue
 
+                # if no customer match with vehicle
+                if vehicle.get_state() == 0:
+                    vehicle.join(request, self.timestep)
+                else:
+                    candidates = vehicle.get_candidests()
+                    sum_d_lat = 0
+                    sum_d_lon = 0
 
+                    for candidate in candidates:
+                        d_lat, d_lon = self.engine.get_latlon(candidate['destination'])
+                        sum_d_lat += d_lat
+                        sum_d_lon += d_lon
 
+                    mean_d_lat = sum_d_lat / len(candidates)
+                    mean_d_lon = sum_d_lon / len(candidates)
 
+                    base_direction = geo_utils.bearing(v_lat, v_lon, mean_d_lat, mean_d_lon)
+
+                    d_lat, d_lon = self.engine.get_latlon(request.get_destination())
+                    r_direction = geo_utils.bearing(v_lat, v_lon, d_lat, d_lon)
+                    delta = abs(base_direction - r_direction)
+                    if self.accept_radian > delta:
+                        distance = geo_utils.great_circle_distance(v_lat, v_lon, d_lat, d_lon)
+                        distance *= np.sin(delta)
+                        if self.base_distance > distance:
+                            vehicle.join(request, self.timestep)

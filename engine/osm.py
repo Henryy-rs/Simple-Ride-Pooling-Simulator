@@ -33,7 +33,7 @@ class OSMEngine:
             with open(paths, "rb") as f:
                 self.shortest_paths = pickle.load(f)
 
-    def get_location(self, nid):
+    def get_latlon(self, nid):
         return self.nodes.loc[nid]['y':'x']
 
     def get_nearest_node(self, lat, lon):
