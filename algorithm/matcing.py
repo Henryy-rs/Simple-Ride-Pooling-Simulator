@@ -78,8 +78,10 @@ class RadianMatcher(Matcher):
                     d_lat, d_lon = self.engine.get_latlon(request.get_destination())
                     r_direction = geo_utils.bearing(v_lat, v_lon, d_lat, d_lon)
                     delta = abs(base_direction - r_direction)
+
                     if self.accept_radian > delta:
                         distance = geo_utils.great_circle_distance(v_lat, v_lon, d_lat, d_lon)
                         distance *= np.sin(delta)
+
                         if self.base_distance > distance:
                             vehicle.join(request, self.timestep)
