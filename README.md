@@ -13,17 +13,7 @@ https://drive.google.com/file/d/1LztpfhNMtibB7oPxVmKtdTCqL1vh-oet/view?usp=shari
 
 you can get paths.pickle by running generate_pickle.py but it will takes more than a day. I recommand you to download a file above.
 
-## Usage
-
- ```bash
- 
-    pip install osmnx
-    
-    python main.py
-
- ```
- 
- options
+ ## options
  
  matching method:
  - greedy
@@ -34,8 +24,17 @@ you can get paths.pickle by running generate_pickle.py but it will takes more th
  - greedy
  - insertion
 
+## Usage
 
- example
+ ```bash
+ 
+    pip install osmnx
+    
+    python main.py
+
+ ```
+
+example
  
  ```bash
  python main.py --days 7 --matching_method radian --routing_method insertion --vehicles 1000
