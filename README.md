@@ -31,5 +31,4 @@ you can get paths.pickle by running generate_pickle.py but it will takes more th
 ## TODO
 
 - logger
-- visualization
-- implement a new algorithm ~ 11.xx
+- implement a matching algorithm ~ 12.07
