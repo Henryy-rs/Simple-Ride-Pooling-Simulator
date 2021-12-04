@@ -33,6 +33,8 @@ class ControlUnit:
             self.matcher = GreedyMatcher(self.timestep, self.engine)
         elif self.matching_method == "radian":
             self.matcher = RadianMatcher(self.timestep, self.engine)
+        elif self.matching_method == "rsubgraph":
+            self.matcher = RestrictedSubgraphMatcher(self.timestep, self.engine)
 
         if self.routing_method == "greedy":
             self.router = GreedyRouter(self.timestep, self.engine)

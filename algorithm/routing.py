@@ -38,6 +38,14 @@ class Route:
         else:
             raise Exception("No route to split. route is empty.")
 
+    def get_start_end_node(self):
+        # print(self.__events)
+        # print(self.__route)
+        i = 0
+        while len(self.__events[i]) == 0:
+            i += 1
+        return self.__route[i-1], self.__route[-1]
+
 
 class Router(metaclass=ABCMeta):
     def __init__(self, timestep, engine):

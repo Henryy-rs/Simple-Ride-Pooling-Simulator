@@ -17,7 +17,7 @@ class Matcher(metaclass=ABCMeta):
 class GreedyMatcher(Matcher):
     def match(self, requests, vehicles):
         for request in requests.values():
-            r_nid = request.get_origin()
+            origin = request.get_origin()
             reject_time = request.get_reject_time()
 
             min_travel_time = reject_time
@@ -27,13 +27,16 @@ class GreedyMatcher(Matcher):
                 if vehicle.is_rideable(request):
                     # location heading and time left
                     v_nid, v_time_left = vehicle.get_location()
-                    travel_time = self.engine.get_shortest_travel_time(v_nid, r_nid, reject_time=reject_time) + v_time_left
+                    travel_time = self.engine.get_shortest_travel_time(v_nid, origin, reject_time=reject_time) + v_time_left
                     if travel_time < min_travel_time:
                         min_travel_time = travel_time
                         min_v_id = v_id
 
             if min_v_id != -1:
                 vehicles[min_v_id].join(request, time_left=self.timestep)
+
+        if len(requests) == 1:
+            return min_v_id
 
 
 class RadianMatcher(Matcher):
@@ -85,3 +88,52 @@ class RadianMatcher(Matcher):
 
                         if self.base_distance > distance:
                             vehicle.join(request, self.timestep)
+
+
+class RestrictedSubgraphMatcher(Matcher):
+    def match(self, requests, vehicles):
+        v_idle = {}
+        v_en_route = {}
+        greedy_matcher = GreedyMatcher(self.timestep, self.engine)
+
+        for v_id, vehicle in vehicles.items():
+            if vehicle.get_state() == 0 or len(vehicle.get_route()) == 1:
+                v_idle[v_id] = vehicle
+            else:
+                v_en_route[v_id] = vehicle
+
+        for r_id, request in requests.items():
+            if len(v_idle) == 0 and len(v_en_route) == 0:
+                return
+            matched_v_id = None
+            origin = request.get_origin()
+            destination = request.get_destination()
+
+            for v_id, vehicle in v_en_route.items():
+                gv_start_point, gv_end_point = vehicle.get_route().get_start_end_node()
+
+                if vehicle.is_rideable(request):
+                    if self.is_subgraph(origin, gv_start_point, gv_end_point):
+                        if self.is_subgraph(gv_start_point, origin, destination):
+                            vehicle.join(request, self.timestep)
+                            matched_v_id = v_id
+                            break
+                        elif self.is_subgraph(destination, gv_start_point, gv_end_point):
+                            vehicle.join(request, self.timestep)
+                            matched_v_id = v_id
+                            break
+
+            if not matched_v_id:
+                matched_v_id = greedy_matcher.match({r_id: request}, v_idle)
+
+                if matched_v_id != -1:
+                    v_idle.pop(matched_v_id)
+
+            else:
+                v_en_route.pop(matched_v_id)
+
+    def is_subgraph(self, point, g_start_point, g_end_point):
+        original_tt = self.engine.get_shortest_travel_time(g_start_point, g_end_point)
+        to_point_tt = self.engine.get_shortest_travel_time(g_start_point, point)
+        from_point_tt = self.engine.get_shortest_travel_time(point, g_end_point)
+        return original_tt + np.sqrt(original_tt) > to_point_tt + from_point_tt
