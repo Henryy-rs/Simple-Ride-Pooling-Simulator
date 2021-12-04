@@ -25,6 +25,18 @@ you can get paths.pickle by running generate_pickle.py but it will takes more th
  
  options
  
+ matching method:
+ - greedy
+ - radian
+ - restricted subgraph
+ 
+ routing method:
+ - greedy
+ - insertion
+
+
+ example
+ 
  ```bash
  python main.py --days 7 --matching_method radian --routing_method insertion --vehicles 1000
  ```
