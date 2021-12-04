@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     control_unit = ControlUnit(current_time=start_time, timestep=time_step, n_vehicles=args.vehicles,
                                matching_method=args.matching_method, routing_method=args.routing_method,
-                               db_dir=args.db_dir, save_dir=args.save_dir, num_workers=args.num_workers,
+                               db_dir=args.db_dir, num_workers=args.num_workers,
                                test_mode=test_mode, network_path=args.network_path, paths=args.paths)
 
     print("Start: {}".format(get_local_datetime(start_time)))
@@ -41,7 +41,7 @@ if __name__ == '__main__':
             step += 1
             current_time += time_step
 
-    control_unit.print_result()
     print("run for {}s".format(int(time.time()-check_start)))
+    control_unit.print_result(save_dir=args.save_dir)
 
 

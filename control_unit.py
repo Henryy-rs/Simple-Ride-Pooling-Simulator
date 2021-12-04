@@ -8,12 +8,13 @@ from multiprocessing import Pool
 
 
 class ControlUnit:
-    def __init__(self, current_time, timestep, n_vehicles, matching_method, routing_method, db_dir, save_dir, num_workers=1,
+    def __init__(self, current_time, timestep, n_vehicles, matching_method, routing_method, db_dir, num_workers=1,
                  test_mode=False, network_path=None, paths=""):
         self.test_mode = test_mode
         self.timestep = timestep
         self.current_time = current_time
         self.current_step = 1
+        self.throughput = 0
         self.n_vehicles = n_vehicles
         self.vehicles = {}
         self.requests = {}
@@ -21,22 +22,24 @@ class ControlUnit:
         self.step_r_ids_accepted = []
         self.engine = OSMEngine(network_path=network_path, paths=paths)
         self.request_loader = RequestLoader(db_dir=db_dir)
-        self.recorder = Recorder(save_dir=save_dir)
+        self.recorder = Recorder()
         self.num_workers = num_workers
-        self.__generate_commander(matching_method, routing_method)
+        self.matching_method = matching_method
+        self.routing_method = routing_method
+        self.__generate_commander()
 
-    def __generate_commander(self, matching_method, routing_method):
-        if matching_method == "greedy":
+    def __generate_commander(self):
+        if self.matching_method == "greedy":
             self.matcher = GreedyMatcher(self.timestep, self.engine)
-        elif matching_method == "radian":
+        elif self.matching_method == "radian":
             self.matcher = RadianMatcher(self.timestep, self.engine)
 
-        if routing_method == "greedy":
+        if self.routing_method == "greedy":
             self.router = GreedyRouter(self.timestep, self.engine)
-        elif routing_method == "insertion":
+        elif self.routing_method == "insertion":
             self.router = InsertionRouter(self.timestep, self.engine)
         else:
-            raise Exception("There is no routing method '{}'".format(matching_method))
+            raise Exception("There is no routing method '{}'".format(self.matching_method))
 
     def dispatch_vehicles(self):
         print("dispatch...", end="\t")
@@ -57,7 +60,7 @@ class ControlUnit:
         #     p.apply(self.__update_vehicles_locations(), ())
         #     p.join()
         self.__gather_records(self.step_requests)
-        self.__update_time()
+        self.__ready_next_step()
 
     def __update_vehicles_locations(self):
         print("update location...")
@@ -82,14 +85,14 @@ class ControlUnit:
             self.recorder.put_metrics(self.current_step, v_id=v_id, serve_time=serve_time, occunpancy_rate=occupancy_rate)
 
         accept_rate = self.__get_n_matched()/len(requests)
-        # TODO: add throughput
-        self.recorder.put_metrics(self.current_step, vehicles=False, accept_rate=accept_rate)
+        self.recorder.put_metrics(self.current_step, vehicles=False, accept_rate=accept_rate, throughput=self.throughput)
         self.__filter_requests(requests)
             
     def manage_request(self, r_id):
         self.step_r_ids_accepted.append(r_id)
 
     def release_request(self, r_id):
+        self.throughput += 1
         if r_id in self.requests:
             return self.requests.pop(r_id)
         else:
@@ -104,12 +107,14 @@ class ControlUnit:
             self.requests[r_id] = requests[r_id]
         self.step_r_ids_accepted.clear()
 
-    def __update_time(self):
+    def __ready_next_step(self):
         self.current_time += self.timestep
         self.current_step += 1
+        self.throughput = 0
 
-    def print_result(self):
-        self.recorder.print()
+    def print_result(self, save_dir):
+        title = "{}+{}, n_vehicles={}".format(self.matching_method, self.routing_method, self.n_vehicles)
+        self.recorder.print(title, save_dir)
 
 
 

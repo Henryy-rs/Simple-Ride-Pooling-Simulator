@@ -1,13 +1,16 @@
 import pandas as pd
+import matplotlib.pyplot as plt
+from os import path
+import os
+import json
 
 
 class Recorder:
-    def __init__(self, save_dir):
+    def __init__(self):
         self.df = pd.DataFrame()
         self.r_df = pd.DataFrame() 
         self.v_df = pd.DataFrame()
         self.sys_metrics = {}
-        self.save_dir = save_dir
 
     def put_events(self, records, next_time, control_unit):
         if not records:
@@ -71,11 +74,43 @@ class Recorder:
         tmp_df = tmp_df.set_index('r_id')
         self.r_df = pd.concat([self.r_df, tmp_df], axis=0)
 
-    def print(self):
+    def print(self, title, save_dir):
         print("---------------------------------------------------")
-        print(self.v_df.mean())
-        print(self.r_df.mean())
-        print(self.sys_metrics)
+        metrics = {}
+        n_metrics = len(self.v_df.columns) + len(self.r_df.columns)
+        fig, axes = plt.subplots(1, n_metrics, figsize=(16, 6))
+        fig.suptitle(title)
+
+        if not path.exists(save_dir):
+            os.mkdir(save_dir)
+
+        save_dir = path.join(save_dir, title)
+
+        if not path.exists(save_dir):
+            os.mkdir(save_dir)
+
+        i = 0
+
+        for col in self.v_df.columns:
+            metrics[col] = self.v_df[col].mean()
+            self.v_df.hist(column=col, bins=100, ax=axes[i])
+            axes[i].set_ylabel("n_vehicles")
+            i += 1
+
+        for col in self.r_df.columns:
+            metrics[col] = self.r_df[col].mean()
+            self.r_df.hist(column=col, bins=100, ax=axes[i])
+            axes[i].set_ylabel("n_customers")
+            i += 1
+
+        for key, value in self.sys_metrics.items():
+            metrics[key] = value
+
+        plt.savefig(path.join(save_dir, "metrics.pdf"),  bbox_inches='tight')
+        self.df.to_csv(path.join(save_dir, "logs.csv"))
+        print(metrics)
+        with open(path.join(save_dir, 'means.txt'), 'w') as convert_file:
+            convert_file.write(json.dumps(metrics))
 
 
 def dict_v2type(dic):

@@ -269,3 +269,4 @@ class InsertionRouter(Router):
             time -= self.engine.get_shortest_travel_time(to_id, from_id)
 
         return time
+

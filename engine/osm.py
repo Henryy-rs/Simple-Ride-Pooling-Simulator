@@ -4,6 +4,7 @@ import osmnx as ox
 import numpy as np
 import pickle
 import sys
+import matplotlib.pyplot as plt
 
 
 sys.setrecursionlimit(100000)
@@ -148,6 +149,10 @@ class OSMEngine:
 
     def save_network(self, filepath):
         ox.save_graphml(self.G, filepath)
+
+    def plot_route(self, route):
+        fig, ax = ox.plot_graph_route(self.G, route, orig_dest_size=200, route_color='g')
+        plt.show()
 
     def __map(self):
         self.mapping = {}

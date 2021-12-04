@@ -13,6 +13,5 @@ parser.add_argument('--time_step', type=int, default=60, help='time step(sec)')
 parser.add_argument('--network_path', type=str, default="data/Manhattan.graphml", help='network_path')
 parser.add_argument('--paths', type=str, default="data/paths.pickle", help='paths path')
 parser.add_argument('--num_workers', type=int, default=1, help='number of workers')
-
-parser.add_argument('--max_requests', type=int, default=None, help='network_path')
+parser.add_argument('--max_requests', type=int, default=None, help='max number of requests in a step')
 
