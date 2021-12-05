@@ -18,7 +18,8 @@ you can get paths.pickle by running generate_pickle.py but it will takes more th
  matching method:
  - greedy
  - radian
- - restricted subgraph
+ - restricted subgraph (https://arxiv.org/pdf/2107.11318.pdf)
+ 
  
  routing method:
  - greedy
@@ -43,7 +44,3 @@ example
  ## Result
  
  ![image](https://user-images.githubusercontent.com/28619620/144733396-b210dd94-4c70-45d1-bb85-c10eda1dc90e.png)
-## TODO
-
-- logger
-- implement a matching algorithm ~ 12.07
