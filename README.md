@@ -17,7 +17,7 @@ you can get paths.pickle by running generate_pickle.py but it will takes more th
  
  matching method:
  - greedy
- - radian (our own algorithm!)
+ - radian
  - restricted subgraph (https://arxiv.org/pdf/2107.11318.pdf)
  
  
