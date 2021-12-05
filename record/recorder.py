@@ -121,6 +121,7 @@ class Recorder:
 
         self.df.to_csv(path.join(save_dir, "logs.csv"))
         with open(path.join(save_dir, 'means.txt'), 'w') as convert_file:
+            convert_file.write(title + '\n')
             convert_file.write(json.dumps(metrics))
 
 

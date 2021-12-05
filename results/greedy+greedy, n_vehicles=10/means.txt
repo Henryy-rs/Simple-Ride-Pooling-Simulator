@@ -1,1 +1,2 @@
-{"serve_time": 50.89, "occupancy_rate": 0.45, "waiting_time": 760.69, "detour_time": 335.25, "accept_rate": 0.12, "throughput": 1.42}
+greedy+greedy, n_vehicles=10
+{"serve_time": 53.02, "occupancy_rate": 0.43, "waiting_time": 649.38, "detour_time": 311.34, "accept_rate": 0.14, "throughput": 1.65}

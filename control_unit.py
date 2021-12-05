@@ -53,7 +53,7 @@ class ControlUnit:
         print("finished")
 
     def step(self):
-        self.step_requests = self.request_loader.iter_request(self.current_time, self.timestep, engine=self.engine)
+        self.step_requests = self.request_loader.iter_request(self.current_time, self.timestep)
         self.__match(self.step_requests)
         self.__route()
         self.__update_vehicles_locations()
