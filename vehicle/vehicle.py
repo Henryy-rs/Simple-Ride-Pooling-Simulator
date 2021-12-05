@@ -112,7 +112,7 @@ class Vehicle:
             self.__state = 1
 
         self.__record(r_id, request.get_state(), time_left)
-        print("vehicle {} and user {} matched".format(self.__v_id, r_id))
+        # print("vehicle {} and user {} matched".format(self.__v_id, r_id))
 
     def __event(self, r_id, time_left):
         request = self.__requests[r_id]
@@ -128,7 +128,7 @@ class Vehicle:
     def __pick_up(self, r_id, time_left):
         self.__occupancy += len(self.__requests[r_id])
         self.__record(r_id, self.__requests[r_id].get_state(), time_left)
-        print("vehicle {} picks up user {}".format(self.__v_id, r_id))
+        # print("vehicle {} picks up user {}".format(self.__v_id, r_id))
 
     def __drop_off(self, r_id, time_left):
         request = self.__requests.pop(r_id)
@@ -139,7 +139,7 @@ class Vehicle:
             self.__state = 0
 
         self.__record(r_id, request.get_state(), time_left)
-        print("vehicle {} drops off user {}".format(self.__v_id, r_id))
+        # print("vehicle {} drops off user {}".format(self.__v_id, r_id))
 
     def set_route(self, route):
         self.__route = route

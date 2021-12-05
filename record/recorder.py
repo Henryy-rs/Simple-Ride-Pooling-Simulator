@@ -91,11 +91,17 @@ class Recorder:
 
         i = 0
 
-        for col in self.v_df.columns:
-            metrics[col] = self.v_df[col].mean()
-            self.v_df.hist(column=col, bins=100, ax=axes[i])
-            axes[i].set_ylabel("n_vehicles")
-            i += 1
+        metrics['serve_time'] = self.v_df['serve_time'].mean()
+        self.v_df.hist(column='serve_time', bins=60, ax=axes[i])
+        axes[i].set_ylabel("n_vehicles")
+        axes[i].set_xbound(0, 60)
+        i += 1
+
+        metrics['occupancy_rate'] = self.v_df['occupancy_rate'].mean()
+        self.v_df.hist(column='occupancy_rate', bins=100, ax=axes[i])
+        axes[i].set_ylabel('occupancy_rate')
+        axes[i].set_xbound(0, 1)
+        i += 1
 
         for col in self.r_df.columns:
             metrics[col] = self.r_df[col].mean()

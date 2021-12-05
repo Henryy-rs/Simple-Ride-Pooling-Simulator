@@ -123,7 +123,7 @@ class RestrictedSubgraphMatcher(Matcher):
                             matched_v_id = v_id
                             break
 
-            if not matched_v_id:
+            if matched_v_id is None:
                 matched_v_id = greedy_matcher.match({r_id: request}, v_idle)
 
                 if matched_v_id != -1:

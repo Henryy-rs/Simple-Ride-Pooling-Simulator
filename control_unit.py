@@ -84,7 +84,7 @@ class ControlUnit:
             self.recorder.put_events(records, next_time=self.current_time + self.timestep, control_unit=self)
             serve_time, occupancy_rate = vehicle.send_vehicle_history()
             # TODO: add travel distance
-            self.recorder.put_metrics(self.current_step, v_id=v_id, serve_time=serve_time, occunpancy_rate=occupancy_rate)
+            self.recorder.put_metrics(self.current_step, v_id=v_id, serve_time=serve_time, occupancy_rate=occupancy_rate)
 
         accept_rate = self.__get_n_matched()/len(requests)
         self.recorder.put_metrics(self.current_step, vehicles=False, accept_rate=accept_rate, throughput=self.throughput)
