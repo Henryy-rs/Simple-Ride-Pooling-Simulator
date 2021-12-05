@@ -39,7 +39,7 @@ class GreedyMatcher(Matcher):
             return min_v_id
 
 
-class RadianMatcher(Matcher):
+class AngleMatcher(Matcher):
     accept_range = 500
     accept_radian = pi/4
     k = 2

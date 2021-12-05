@@ -31,8 +31,8 @@ class ControlUnit:
     def __generate_commander(self):
         if self.matching_method == "greedy":
             self.matcher = GreedyMatcher(self.timestep, self.engine)
-        elif self.matching_method == "radian":
-            self.matcher = RadianMatcher(self.timestep, self.engine)
+        elif self.matching_method == "angle":
+            self.matcher = AngleMatcher(self.timestep, self.engine)
         elif self.matching_method == "rsubgraph":
             self.matcher = RestrictedSubgraphMatcher(self.timestep, self.engine)
 
