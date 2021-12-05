@@ -37,8 +37,8 @@ class OSMEngine:
     def get_latlon(self, nid):
         return self.nodes.loc[nid]['y':'x']
 
-    def get_nearest_node(self, lat, lon):
-        return ox.distance.nearest_nodes(self.G, X=lon, Y=lat)
+    def get_nearest_nodes(self, lat, lon, return_dist=False):
+        return ox.distance.nearest_nodes(self.G, X=lon, Y=lat, return_dist=return_dist)
 
     def generate_random_node(self):
         nid = np.random.choice(self.nodes.index)
@@ -150,15 +150,22 @@ class OSMEngine:
     def save_network(self, filepath):
         ox.save_graphml(self.G, filepath)
 
+    def __map(self):
+        self.mapping = {}
+        for i, node in enumerate(self.G.nodes):
+            self.mapping[i] = node
+
     def plot_route(self, route):
         fig, ax = ox.plot_graph_route(self.G, route, orig_dest_size=200, route_color='g')
         plt.show()
 
-    def __map(self):
-        self.mapping = {}
-        for i, node in enumerate(self.G.edges):
-            self.mapping[i] = node
-
+"""
+    def plot_nodes(self, *nodes):
+        fig, ax = plt.subplots(figsize=(12, 8))
+        for node in nodes:
+            ox.plot_graph_route(self.G, [node], ax=ax)
+        plt.show()
+"""
 
 
 

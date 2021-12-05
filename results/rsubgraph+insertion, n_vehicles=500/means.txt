@@ -1,1 +1,0 @@
-{"serve_time": 54.96906805555555, "occunpancy_rate": 0.5635840277777775, "waiting_time": 627.937324532164, "detour_time": 1075.1409752021107, "accept_rate": 0.3850801354465853, "throughput": 73.95902777777785}

@@ -1,1 +1,0 @@
-{"serve_time": 30.0, "occupancy_rate": 0.0925, "waiting_time": 465.1621621621622, "detour_time": 18.43243243243243, "accept_rate": 0.022014907221201512, "throughput": 0.6166666666666667}

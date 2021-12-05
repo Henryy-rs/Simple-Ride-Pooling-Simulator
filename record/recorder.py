@@ -113,8 +113,13 @@ class Recorder:
             metrics[key] = value
 
         plt.savefig(path.join(save_dir, "metrics.pdf"),  bbox_inches='tight')
+
+        for metric, value in metrics.items():
+            value = round(value, 2)
+            print("{}\t: {}".format(metric, value))
+            metrics[metric] = value
+
         self.df.to_csv(path.join(save_dir, "logs.csv"))
-        print(metrics)
         with open(path.join(save_dir, 'means.txt'), 'w') as convert_file:
             convert_file.write(json.dumps(metrics))
 
