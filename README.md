@@ -38,10 +38,10 @@ you can get paths.pickle by running generate_pickle.py but it will takes more th
 example
  
  ```bash
- python main.py --days 7 --matching_method angle --routing_method insertion --vehicles 1000
+ python main.py --days 7 --matching_method greedy --routing_method insertion --supply under
  ```
  
  ## Result
  
- ![image](https://user-images.githubusercontent.com/28619620/144733396-b210dd94-4c70-45d1-bb85-c10eda1dc90e.png)
- 
+![image](https://user-images.githubusercontent.com/28619620/144892474-f0746a46-f109-4c88-8ce6-603bf3bc2eee.png)
+ {"serve_time": 55.19, "occupancy_rate": 0.59, "waiting_time": 566.36, "detour_time": 818.81, "accept_rate": 0.61, "throughput": 121.46}
