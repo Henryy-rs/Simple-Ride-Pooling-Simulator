@@ -44,4 +44,4 @@ example
  ## Result
  
 ![image](https://user-images.githubusercontent.com/28619620/144892474-f0746a46-f109-4c88-8ce6-603bf3bc2eee.png)
- 
+ {"serve_time": 55.19, "occupancy_rate": 0.59, "waiting_time": 566.36, "detour_time": 818.81, "accept_rate": 0.61, "throughput": 121.46}
