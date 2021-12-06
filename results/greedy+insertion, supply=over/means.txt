@@ -1,0 +1,2 @@
+greedy+insertion, supply=over
+{"serve_time": 48.23, "occupancy_rate": 0.32, "waiting_time": 745.85, "detour_time": 412.09, "accept_rate": 1.0, "throughput": 223.44}

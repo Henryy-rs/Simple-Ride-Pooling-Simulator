@@ -1,0 +1,2 @@
+greedy+greedy, supply=over
+{"serve_time": 43.55, "occupancy_rate": 0.34, "waiting_time": 18.28, "detour_time": 385.69, "accept_rate": 0.99, "throughput": 223.45}
