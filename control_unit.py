@@ -4,12 +4,11 @@ from algorithm.routing import *
 from algorithm.matcing import *
 from request.request_loader import RequestLoader
 from record.recorder import Recorder
-from multiprocessing import Pool
 
 
 class ControlUnit:
-    def __init__(self, current_time, timestep, n_vehicles, matching_method, routing_method, db_dir, num_workers=1,
-                 test_mode=False, network_path=None, paths=""):
+    def __init__(self, current_time, timestep, n_vehicles, matching_method, routing_method, db_dir,
+                 test_mode=False, logging_mode=False, network_path=None, paths=""):
         self.test_mode = test_mode
         self.timestep = timestep
         self.current_time = current_time
@@ -21,9 +20,8 @@ class ControlUnit:
         self.step_requests = {}
         self.step_r_ids_accepted = []
         self.engine = OSMEngine(network_path=network_path, paths=paths)
-        self.request_loader = RequestLoader(db_dir=db_dir)
+        self.request_loader = RequestLoader(db_dir=db_dir, logging_mode=logging_mode)
         self.recorder = Recorder()
-        self.num_workers = num_workers
         self.matching_method = matching_method
         self.routing_method = routing_method
         self.__generate_commander()
@@ -57,10 +55,6 @@ class ControlUnit:
         self.__match(self.step_requests)
         self.__route()
         self.__update_vehicles_locations()
-        # with Pool(self.num_workers) as p:
-        #     p.apply(self.__route(), ())
-        #     p.apply(self.__update_vehicles_locations(), ())
-        #     p.join()
         self.__gather_records(self.step_requests)
         self.__ready_next_step()
 
