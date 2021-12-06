@@ -20,8 +20,8 @@ class ControlUnit:
         self.step_requests = {}
         self.step_r_ids_accepted = []
         self.engine = OSMEngine(network_path=network_path, paths=paths)
-        self.request_loader = RequestLoader(db_dir=db_dir, logging_mode=logging_mode)
-        self.recorder = Recorder()
+        self.request_loader = RequestLoader(db_dir=db_dir)
+        self.recorder = Recorder(logging_mode=logging_mode)
         self.matching_method = matching_method
         self.routing_method = routing_method
         self.__generate_commander()

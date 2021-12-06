@@ -24,7 +24,8 @@ if __name__ == '__main__':
 
     control_unit = ControlUnit(current_time=start_time, timestep=time_step, n_vehicles=args.vehicles,
                                matching_method=args.matching_method, routing_method=args.routing_method,
-                               logging_mode=args.logging_mode, network_path=args.network_path, paths=args.paths)
+                               db_dir=args.db_dir, test_mode=test_mode, logging_mode=args.logging_mode,
+                               network_path=args.network_path, paths=args.paths)
 
     print("Start: {}".format(get_local_datetime(start_time)))
     print("End  : {}".format(get_local_datetime(end_time)))

@@ -7,11 +7,14 @@ import json
 
 class Recorder:
     def __init__(self, logging_mode=False):
-        if logging_mode:
-            self.df = pd.DataFrame()
         self.r_df = pd.DataFrame()
         self.v_df = pd.DataFrame()
+        self.time_log = {}
         self.sys_metrics = {}
+
+        self.logging_mode = logging_mode
+        if self.logging_mode:
+            self.log_df = pd.DataFrame()
 
     def put_events(self, records, next_time, control_unit):
         if not records:
@@ -24,10 +27,12 @@ class Recorder:
             tmp_df = tmp_df.astype(dict_v2type(records[0]))
 
             for record in records:
+                self.__remember_time(record, next_time)
                 r_state = record['r_state']
                 r_id = record['r_id']
-                record['time'] = next_time - record['time']
+
                 tmp_df = tmp_df.append(record, ignore_index=True)
+
                 if r_state == 1:
                     control_unit.manage_request(r_id)
                 elif r_state == 3:
@@ -35,13 +40,13 @@ class Recorder:
                     tmp_requests.append(request)
 
             tmp_df = tmp_df.set_index(['v_id', 'r_id', 'r_state'])
-            self.df = pd.concat([self.df, tmp_df], axis=0)
-
+            self.log_df = pd.concat([self.log_df, tmp_df], axis=0)
         else:
             for record in records:
+                self.__remember_time(record, next_time)
                 r_state = record['r_state']
                 r_id = record['r_id']
-                record['time'] = next_time - record['time']
+
                 if r_state == 1:
                     control_unit.manage_request(r_id)
                 elif r_state == 3:
@@ -78,10 +83,7 @@ class Recorder:
 
         for request in requests:
             r_id = request.get_id()
-            series = self.df.iloc[self.df.index.get_level_values('r_id') == r_id]
-            match_time = series.iloc[series.index.get_level_values('r_state') == 1]['time'].to_numpy()[0]
-            pick_time = series.iloc[series.index.get_level_values('r_state') == 2]['time'].to_numpy()[0]
-            drop_time = series.iloc[series.index.get_level_values('r_state') == 3]['time'].to_numpy()[0]
+            match_time, pick_time, drop_time = self.time_log.pop(r_id)
             waiting_time = pick_time - match_time
             detour_time = drop_time - pick_time - int(request.get_best_tt())
             metrics = dict(r_id=r_id, waiting_time=waiting_time, detour_time=detour_time)
@@ -93,6 +95,7 @@ class Recorder:
 
     def print(self, title, save_dir):
         print("---------------------------------------------------")
+        print("printing...")
         metrics = {}
         n_metrics = len(self.v_df.columns) + len(self.r_df.columns)
         fig, axes = plt.subplots(1, n_metrics, figsize=(16, 6))
@@ -122,8 +125,9 @@ class Recorder:
 
         for col in self.r_df.columns:
             metrics[col] = self.r_df[col].mean()
-            self.r_df.hist(column=col, bins=100, ax=axes[i])
+            self.r_df.hist(column=col, bins=500, ax=axes[i])
             axes[i].set_ylabel("n_customers")
+            axes[i].set_xbound(0, 5000)
             i += 1
 
         for key, value in self.sys_metrics.items():
@@ -140,8 +144,19 @@ class Recorder:
             convert_file.write(title + '\n')
             convert_file.write(json.dumps(metrics))
 
+        self.r_df.to_csv(path.join(save_dir, "request_log.csv"))
+        self.v_df.to_csv(path.join(save_dir, "vehicle_log.csv"))
+
         if self.logging_mode:
-            self.df.to_csv(path.join(save_dir, "logs.csv"))
+            self.log_df.to_csv(path.join(save_dir, "log.csv"))
+
+    def __remember_time(self, record, next_time):
+        r_id = record['r_id']
+        record['time'] = next_time - record['time']
+
+        if r_id not in self.time_log.keys():
+            self.time_log[r_id] = []
+        self.time_log[r_id].append(record['time'])
 
 
 def dict_v2type(dic):

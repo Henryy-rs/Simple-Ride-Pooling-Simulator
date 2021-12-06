@@ -1,0 +1,2 @@
+angle+insertion, n_vehicles=500
+{"serve_time": 46.45, "occupancy_rate": 0.46, "waiting_time": 293.77, "detour_time": 540.38, "accept_rate": 0.55, "throughput": 106.35}
