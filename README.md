@@ -38,7 +38,7 @@ you can get paths.pickle by running generate_pickle.py but it will takes more th
 example
  
  ```bash
- python main.py --days 7 --matching_method angle --routing_method insertion --supply under
+ python main.py --days 7 --matching_method greedy --routing_method insertion --supply under
  ```
  
  ## Result
