@@ -125,13 +125,13 @@ class Recorder:
         metrics['serve_time'] = self.v_df['serve_time'].mean()
         self.v_df.hist(column='serve_time', bins=60, ax=axes[i])
         axes[i].set_ylabel("n_vehicles")
-        axes[i].set_xbound(0, 60)
+        axes[i].set_xbound(1, 60)
         i += 1
 
         metrics['occupancy_rate'] = self.v_df['occupancy_rate'].mean()
         self.v_df.hist(column='occupancy_rate', bins=100, ax=axes[i])
         axes[i].set_ylabel('occupancy_rate')
-        axes[i].set_xbound(0, 1)
+        axes[i].set_xbound(0.01, 1)
         i += 1
 
         for col in self.r_df.columns:

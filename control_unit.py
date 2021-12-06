@@ -28,9 +28,9 @@ class ControlUnit:
             self.sleeping_vehicles = deque()
             # arbitrarily set values. You can change them.
             if self.quantity_supplied == "over":
-                self.k = 4
+                self.k = 5
             elif self.quantity_supplied == "balanced":
-                self.k = 3
+                self.k = 3.5
             elif self.quantity_supplied == "under":
                 self.k = 2
 
