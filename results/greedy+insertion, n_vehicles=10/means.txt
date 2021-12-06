@@ -1,2 +1,0 @@
-greedy+insertion, n_vehicles=10
-{"serve_time": 48.96, "occupancy_rate": 0.33, "waiting_time": 830.07, "detour_time": 498.0, "accept_rate": 0.1, "throughput": 0.75}

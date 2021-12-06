@@ -4,11 +4,12 @@ from algorithm.routing import *
 from algorithm.matcing import *
 from request.request_loader import RequestLoader
 from record.recorder import Recorder
+from collections import deque
 
 
 class ControlUnit:
     def __init__(self, current_time, timestep, n_vehicles, matching_method, routing_method, db_dir,
-                 test_mode=False, logging_mode=False, network_path=None, paths=""):
+                 test_mode=False, logging_mode=False, network_path=None, quantity_supplied="oversupply", paths=""):
         self.test_mode = test_mode
         self.timestep = timestep
         self.current_time = current_time
@@ -17,6 +18,22 @@ class ControlUnit:
         self.n_vehicles = n_vehicles
         self.vehicles = {}
         self.requests = {}
+
+        # used to adjust number of vehicles according to the number of requests.
+        self.quantity_supplied = quantity_supplied
+        if self.quantity_supplied:
+            self.EMA = 20
+            self.alpha = 0.5
+            # queue
+            self.sleeping_vehicles = deque()
+            # arbitrarily set values. You can change them.
+            if self.quantity_supplied == "over":
+                self.k = 5
+            elif self.quantity_supplied == "balanced":
+                self.k = 3.5
+            elif self.quantity_supplied == "under":
+                self.k = 2
+
         self.step_requests = {}
         self.step_r_ids_accepted = []
         self.engine = OSMEngine(network_path=network_path, paths=paths)
@@ -52,7 +69,9 @@ class ControlUnit:
 
     def step(self):
         self.step_requests = self.request_loader.iter_request(self.current_time, self.timestep)
-        self.__match(self.step_requests)
+        if self.quantity_supplied:
+            self.__adjust_n_vehicles()
+        self.__match()
         self.__route()
         self.__update_vehicles_locations()
         self.__gather_records(self.step_requests)
@@ -63,10 +82,11 @@ class ControlUnit:
 
         for vehicle in self.vehicles.values():
             vehicle.update_location(time_left=self.timestep, engine=self.engine)
+            vehicle.update_serve_steps()
         print("finished")
 
-    def __match(self, requests):
-        self.matcher.match(requests, self.vehicles)
+    def __match(self):
+        self.matcher.match(self.step_requests, self.vehicles)
 
     def __route(self):
         for vehicle in self.vehicles.values():
@@ -78,8 +98,7 @@ class ControlUnit:
             self.recorder.put_events(records, next_time=self.current_time + self.timestep, control_unit=self)
             serve_time, occupancy_rate = vehicle.send_vehicle_history()
             # TODO: add travel distance
-            self.recorder.put_metrics(self.current_step, v_id=v_id, serve_time=serve_time, occupancy_rate=occupancy_rate)
-
+            self.recorder.put_metrics(vehicle.get_n_serve_steps(), v_id=v_id, serve_time=serve_time, occupancy_rate=occupancy_rate)
         accept_rate = self.__get_n_matched()/len(requests)
         self.recorder.put_metrics(self.current_step, vehicles=False, accept_rate=accept_rate, throughput=self.throughput)
         self.__filter_requests(requests)
@@ -108,8 +127,38 @@ class ControlUnit:
         self.current_step += 1
         self.throughput = 0
 
+    def __adjust_n_vehicles(self):
+        n_requests = len(self.step_requests)
+        self.EMA = self.alpha*n_requests + self.EMA*(1 - self.alpha)
+        target_n_vehicles = int(self.EMA*self.k)
+        active_n_vehicles = len(self.vehicles)
+        delta = target_n_vehicles - active_n_vehicles
+
+        if delta > 0:
+            while delta > 0 and self.sleeping_vehicles:
+                vehicle = self.sleeping_vehicles.popleft()
+                v_id = vehicle.get_id()
+                assert v_id not in self.vehicles.keys(), "management error"
+                assert vehicle.get_state() == 0, "invalid vehicle's state"
+                self.vehicles[v_id] = vehicle
+                delta -= 1
+        elif delta < 0:
+            v_id_to_pop = []
+            for v_id, vehicle in self.vehicles.items():
+                if vehicle.get_state() == 0:
+                    v_id_to_pop.append(v_id)
+                    self.sleeping_vehicles.append(vehicle)
+                    delta += 1
+                    if delta == 0:
+                        break
+            for v_id in v_id_to_pop:
+                self.vehicles.pop(v_id)
+
     def print_result(self, save_dir):
-        title = "{}+{}, n_vehicles={}".format(self.matching_method, self.routing_method, self.n_vehicles)
+        if self.test_mode:
+            title = "{}+{}, test_mode".format(self.matching_method, self.routing_method)
+        else:
+            title = "{}+{}, supply={}".format(self.matching_method, self.routing_method, self.quantity_supplied)
         self.recorder.print(title, save_dir)
 
 

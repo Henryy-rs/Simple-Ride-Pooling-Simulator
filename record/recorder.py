@@ -27,7 +27,8 @@ class Recorder:
             tmp_df = tmp_df.astype(dict_v2type(records[0]))
 
             for record in records:
-                self.__remember_time(record, next_time)
+                # event: join, pick up, drop off
+                self.__memorize_event_time(record, next_time)
                 r_state = record['r_state']
                 r_id = record['r_id']
 
@@ -43,7 +44,8 @@ class Recorder:
             self.log_df = pd.concat([self.log_df, tmp_df], axis=0)
         else:
             for record in records:
-                self.__remember_time(record, next_time)
+                # event: join, pick up, drop off
+                self.__memorize_event_time(record, next_time)
                 r_state = record['r_state']
                 r_id = record['r_id']
 
@@ -57,16 +59,16 @@ class Recorder:
 
     def put_metrics(self, step, vehicles=True, **metrics):
         if vehicles:
-            if step == 1:
+            v_id = metrics['v_id']
+            if v_id in self.v_df.index:
+                series = pd.Series(metrics)
+                self.v_df.loc[v_id] = (self.v_df.loc[v_id]*(step-1) + series)/step
+            else:
                 tmp_df = pd.DataFrame(columns=list(metrics.keys()))
                 tmp_df = tmp_df.append(metrics, ignore_index=True)
                 tmp_df = tmp_df.astype(dict_v2type(metrics))
                 tmp_df = tmp_df.set_index('v_id')
                 self.v_df = pd.concat([self.v_df, tmp_df], axis=0)
-            else:
-                r_id = metrics['v_id']
-                series = pd.Series(metrics)
-                self.v_df.loc[r_id] = (self.v_df.loc[r_id]*(step-1) + series)/step
 
         else:
             if not self.sys_metrics:
@@ -84,8 +86,17 @@ class Recorder:
         for request in requests:
             r_id = request.get_id()
             match_time, pick_time, drop_time = self.time_log.pop(r_id)
+
+            assert match_time <= pick_time <= drop_time, "time_error"
+
             waiting_time = pick_time - match_time
             detour_time = drop_time - pick_time - int(request.get_best_tt())
+
+            # Sometimes, detour_time can de less than zero.
+            # This is because the value returned by engine.shortest_travel_time is not a global optimal solution.
+            if detour_time < 0:
+                detour_time = 0
+
             metrics = dict(r_id=r_id, waiting_time=waiting_time, detour_time=detour_time)
             tmp_df = tmp_df.append(metrics, ignore_index=True)
 
@@ -98,7 +109,7 @@ class Recorder:
         print("printing...")
         metrics = {}
         n_metrics = len(self.v_df.columns) + len(self.r_df.columns)
-        fig, axes = plt.subplots(1, n_metrics, figsize=(16, 6))
+        fig, axes = plt.subplots(1, n_metrics, figsize=(18, 6))
         fig.suptitle(title)
 
         if not path.exists(save_dir):
@@ -125,9 +136,10 @@ class Recorder:
 
         for col in self.r_df.columns:
             metrics[col] = self.r_df[col].mean()
-            self.r_df.hist(column=col, bins=500, ax=axes[i])
+            self.r_df.hist(column=col, bins=1000, ax=axes[i])
+            axes[i].set_ybound(0, 100000)
             axes[i].set_ylabel("n_customers")
-            axes[i].set_xbound(0, 5000)
+            axes[i].set_xbound(0, 1000)
             i += 1
 
         for key, value in self.sys_metrics.items():
@@ -150,13 +162,41 @@ class Recorder:
         if self.logging_mode:
             self.log_df.to_csv(path.join(save_dir, "log.csv"))
 
-    def __remember_time(self, record, next_time):
+    def __memorize_event_time(self, record, next_time):
         r_id = record['r_id']
         record['time'] = next_time - record['time']
 
         if r_id not in self.time_log.keys():
             self.time_log[r_id] = []
         self.time_log[r_id].append(record['time'])
+
+    @staticmethod
+    def plot_from_csv(title, save_dir):
+        r_df = pd.read_csv(path.join(save_dir, "request_log.csv"), index_col='r_id')
+        v_df = pd.read_csv(path.join(save_dir, "vehicle_log.csv"), index_col='v_id')
+        n_metrics = len(v_df.columns) + len(r_df.columns)
+        fig, axes = plt.subplots(1, n_metrics, figsize=(18, 6))
+        fig.suptitle(title)
+        i = 0
+
+        v_df.hist(column='serve_time', bins=60, ax=axes[i])
+        axes[i].set_ylabel("n_vehicles")
+        axes[i].set_xbound(0, 60)
+        i += 1
+
+        v_df.hist(column='occupancy_rate', bins=100, ax=axes[i])
+        axes[i].set_ylabel('occupancy_rate')
+        axes[i].set_xbound(0, 1)
+        i += 1
+
+        for col in r_df.columns:
+            r_df.hist(column=col, bins=1000, ax=axes[i])
+            axes[i].set_ybound(0, 100000)
+            axes[i].set_xbound(0, 1000)
+            axes[i].set_ylabel("n_customers")
+            i += 1
+
+        plt.savefig(path.join(save_dir, "metrics.pdf"),  bbox_inches='tight')
 
 
 def dict_v2type(dic):

@@ -11,6 +11,7 @@ class Vehicle:
         self.__new_requests = {}
         self.__serve_time = 0
         self.__history = []
+        self.__n_serve_steps = 0
 
         # location expression
         self.__location = engine.generate_random_node()
@@ -173,6 +174,9 @@ class Vehicle:
 
         return candidate_destination
 
+    def get_id(self):
+        return self.__v_id
+
     def __record(self, r_id, r_state, time_left):
         self.__history.append({'v_id': self.__v_id, 'r_id': r_id, 'r_state': r_state,
                                'time': int(time_left), 'location': self.__location})
@@ -187,3 +191,9 @@ class Vehicle:
         self.__serve_time = 0
         occupancy_rate = self.__occupancy/self.__max_capacity
         return serve_time, occupancy_rate
+
+    def update_serve_steps(self):
+        self.__n_serve_steps += 1
+
+    def get_n_serve_steps(self):
+        return self.__n_serve_steps

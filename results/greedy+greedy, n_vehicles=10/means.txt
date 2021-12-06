@@ -1,2 +1,0 @@
-greedy+greedy, n_vehicles=10
-{"serve_time": 49.39, "occupancy_rate": 0.4, "waiting_time": 709.37, "detour_time": 271.17, "accept_rate": 0.12, "throughput": 1.38}

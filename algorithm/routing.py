@@ -39,8 +39,6 @@ class Route:
             raise Exception("No route to split. route is empty.")
 
     def get_start_end_node(self):
-        # print(self.__events)
-        # print(self.__route)
         i = 0
         while len(self.__events[i]) == 0:
             i += 1
@@ -118,7 +116,6 @@ class GreedyRouter(Router):
         min_route = route
         min_index = 0
         min_state = r_state
-
         for i in range(1, len(candidates)):
             r_id, r_state, origin, destination = candidates[i].values()
 
@@ -244,7 +241,7 @@ class InsertionRouter(Router):
                 events_idx.append(i)
 
         for offset in events_idx:
-            additional_times.append([self.__get_additional_time(prev_node_id, node_id_to_insert, route[i]), prev_offset, offset])
+            additional_times.append([self.__get_additional_time(prev_node_id, node_id_to_insert, route[offset]), prev_offset, offset])
             prev_node_id = route[offset]
             prev_offset = offset
 

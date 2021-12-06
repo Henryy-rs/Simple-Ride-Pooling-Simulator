@@ -9,7 +9,6 @@ class Request:
         self.waiting_time = 0
         self.state = 0
         self.n = 1
-        self.route = None
 
     def get_origin(self):
         return self.origin
