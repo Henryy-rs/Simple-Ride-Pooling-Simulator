@@ -1,0 +1,2 @@
+greedy+greedy, test_mode
+{"serve_time": 37.43, "occupancy_rate": 0.37, "waiting_time": 336.64, "detour_time": 359.41, "accept_rate": 0.67, "throughput": 8.4, "utilization": 0.02, "sys_efficiency": 6.95, "customer_score": 1.44}

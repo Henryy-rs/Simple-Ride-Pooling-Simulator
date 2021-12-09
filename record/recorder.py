@@ -9,8 +9,11 @@ class Recorder:
     def __init__(self, logging_mode=False):
         self.r_df = pd.DataFrame()
         self.v_df = pd.DataFrame()
-        self.time_log = {}
-        self.sys_metrics = {}
+        self.sys_df = pd.DataFrame()
+        self.request_log = {}
+        self.vehicle_log = {}
+        self.system_log = {}
+        self.event_time_log = {}
 
         self.logging_mode = logging_mode
         if self.logging_mode:
@@ -59,7 +62,17 @@ class Recorder:
 
     def put_metrics(self, step, vehicles=True, **metrics):
         if vehicles:
-            v_id = metrics['v_id']
+            v_id = metrics.pop('v_id')
+            if v_id not in self.vehicle_log.keys():
+                self.vehicle_log[v_id] = metrics
+            else:
+                # get average metrics values
+                average_dict = {}
+                for metric, value in self.vehicle_log[v_id].items():
+                    average_dict[metric] = (value*(step - 1) + metrics[metric])/step
+                self.vehicle_log[v_id] = average_dict
+
+            """
             if v_id in self.v_df.index:
                 series = pd.Series(metrics)
                 self.v_df.loc[v_id] = (self.v_df.loc[v_id]*(step-1) + series)/step
@@ -69,23 +82,25 @@ class Recorder:
                 tmp_df = tmp_df.astype(dict_v2type(metrics))
                 tmp_df = tmp_df.set_index('v_id')
                 self.v_df = pd.concat([self.v_df, tmp_df], axis=0)
+            """
 
         else:
-            if not self.sys_metrics:
-                self.sys_metrics = metrics.copy()
+            self.system_log[step] = metrics
+            """
             else:
-                for metric, value in self.sys_metrics.items():
-                    self.sys_metrics[metric] = (value * (step-1) + metrics[metric]) / step
+                for metric, value in self.system_log.items():
+                    self.system_log[metric] = (value * (step-1) + metrics[metric]) / step
+            """
 
     def record_requests(self, requests):
         if not requests:
             return
 
-        tmp_df = pd.DataFrame()
+        # tmp_df = pd.DataFrame()
 
         for request in requests:
             r_id = request.get_id()
-            match_time, pick_time, drop_time = self.time_log.pop(r_id)
+            match_time, pick_time, drop_time = self.event_time_log.pop(r_id)
 
             assert match_time <= pick_time <= drop_time, "time_error"
 
@@ -97,19 +112,28 @@ class Recorder:
             if detour_time < 0:
                 detour_time = 0
 
-            metrics = dict(r_id=r_id, waiting_time=waiting_time, detour_time=detour_time)
+            metrics = dict(waiting_time=waiting_time, detour_time=detour_time)
+            self.request_log[r_id] = metrics
+        """
             tmp_df = tmp_df.append(metrics, ignore_index=True)
-
+        
         tmp_df = tmp_df.astype(dict_v2type(metrics))
         tmp_df = tmp_df.set_index('r_id')
         self.r_df = pd.concat([self.r_df, tmp_df], axis=0)
+        """
 
-    def print(self, title, save_dir):
+    def print(self, title, save_dir, timestep):
+
         print("---------------------------------------------------")
         print("printing...")
+        self.v_df = pd.DataFrame.from_dict(self.vehicle_log, orient='index')  # 2
+        self.r_df = pd.DataFrame.from_dict(self.request_log, orient='index')  # 2
+        self.sys_df = pd.DataFrame.from_dict(self.system_log, orient='index') # 3
+
+        print(self.r_df)
         metrics = {}
         n_metrics = len(self.v_df.columns) + len(self.r_df.columns)
-        fig, axes = plt.subplots(1, n_metrics, figsize=(18, 6))
+        fig, axes = plt.subplots(1, n_metrics, figsize=(18, 12))
         fig.suptitle(title)
 
         if not path.exists(save_dir):
@@ -123,29 +147,34 @@ class Recorder:
         i = 0
 
         metrics['serve_time'] = self.v_df['serve_time'].mean()
-        self.v_df.hist(column='serve_time', bins=60, ax=axes[i])
-        axes[i].set_ylabel("n_vehicles")
-        axes[i].set_xbound(1, 60)
+        cur_axes = axes[i]
+        self.v_df.hist(column='serve_time', bins=60, ax=cur_axes)
+        cur_axes.set_ylabel("n_vehicles")
+        cur_axes.set_xbound(1, 60)
         i += 1
 
         metrics['occupancy_rate'] = self.v_df['occupancy_rate'].mean()
-        self.v_df.hist(column='occupancy_rate', bins=100, ax=axes[i])
-        axes[i].set_ylabel('occupancy_rate')
-        axes[i].set_xbound(0.01, 1)
+        cur_axes = axes[i]
+        self.v_df.hist(column='occupancy_rate', bins=100, ax=cur_axes)
+        cur_axes.set_ylabel('n_vehicles')
+        cur_axes.set_xbound(0.01, 1)
         i += 1
 
         for col in self.r_df.columns:
             metrics[col] = self.r_df[col].mean()
-            self.r_df.hist(column=col, bins=1000, ax=axes[i])
+            cur_axes = axes[i]
+            self.r_df.hist(column=col, bins=1000, ax=cur_axes)
             axes[i].set_ybound(0, 100000)
             axes[i].set_ylabel("n_customers")
             axes[i].set_xbound(0, 1000)
             i += 1
 
-        for key, value in self.sys_metrics.items():
-            metrics[key] = value
-
+        for col in self.sys_df.columns:
+            metrics[col] = self.sys_df[col].mean()
         plt.savefig(path.join(save_dir, "metrics.pdf"),  bbox_inches='tight')
+
+        metrics['sys_efficiency'] = metrics['throughput']/(metrics['utilization']*timestep)
+        metrics['customer_score'] = 1000 / (metrics['waiting_time'] + metrics['detour_time'])
 
         for metric, value in metrics.items():
             value = round(value, 2)
@@ -166,9 +195,9 @@ class Recorder:
         r_id = record['r_id']
         record['time'] = next_time - record['time']
 
-        if r_id not in self.time_log.keys():
-            self.time_log[r_id] = []
-        self.time_log[r_id].append(record['time'])
+        if r_id not in self.event_time_log.keys():
+            self.event_time_log[r_id] = []
+        self.event_time_log[r_id].append(record['time'])
 
     @staticmethod
     def plot_from_csv(title, save_dir):
@@ -178,22 +207,23 @@ class Recorder:
         fig, axes = plt.subplots(1, n_metrics, figsize=(18, 6))
         fig.suptitle(title)
         i = 0
-
-        v_df.hist(column='serve_time', bins=60, ax=axes[i])
-        axes[i].set_ylabel("n_vehicles")
-        axes[i].set_xbound(0, 60)
+        cur_axes = axes[i]
+        v_df.hist(column='serve_time', bins=60, ax=cur_axes)
+        cur_axes.set_ylabel("n_vehicles")
+        cur_axes.set_xbound(1, 60)
         i += 1
-
-        v_df.hist(column='occupancy_rate', bins=100, ax=axes[i])
-        axes[i].set_ylabel('occupancy_rate')
-        axes[i].set_xbound(0, 1)
+        cur_axes = axes[i]
+        v_df.hist(column='occupancy_rate', bins=100, ax=cur_axes)
+        cur_axes.set_ylabel('n_vehicles')
+        cur_axes.set_xbound(0.01, 1)
         i += 1
 
         for col in r_df.columns:
-            r_df.hist(column=col, bins=1000, ax=axes[i])
-            axes[i].set_ybound(0, 100000)
-            axes[i].set_xbound(0, 1000)
-            axes[i].set_ylabel("n_customers")
+            cur_axes = axes[i]
+            r_df.hist(column=col, bins=1000, ax=cur_axes)
+            cur_axes.set_ybound(0, 100000)
+            cur_axes.set_xbound(0, 1000)
+            cur_axes.set_ylabel("n_customers")
             i += 1
 
         plt.savefig(path.join(save_dir, "metrics.pdf"),  bbox_inches='tight')

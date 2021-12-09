@@ -1,0 +1,2 @@
+rsubgraph+greedy, supply=over
+{"serve_time": 42.25, "occupancy_rate": 0.13, "waiting_time": 109.17, "detour_time": 35.49, "accept_rate": 0.73, "throughput": 176.76}

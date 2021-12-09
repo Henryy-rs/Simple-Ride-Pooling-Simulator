@@ -100,7 +100,9 @@ class ControlUnit:
             # TODO: add travel distance
             self.recorder.put_metrics(vehicle.get_n_serve_steps(), v_id=v_id, serve_time=serve_time, occupancy_rate=occupancy_rate)
         accept_rate = self.__get_n_matched()/len(requests)
-        self.recorder.put_metrics(self.current_step, vehicles=False, accept_rate=accept_rate, throughput=self.throughput)
+        utilization = len(self.vehicles)/self.n_vehicles
+        self.recorder.put_metrics(self.current_step, vehicles=False, accept_rate=accept_rate,
+                                  throughput=self.throughput, utilization=utilization)
         self.__filter_requests(requests)
             
     def manage_request(self, r_id):
@@ -159,7 +161,7 @@ class ControlUnit:
             title = "{}+{}, test_mode".format(self.matching_method, self.routing_method)
         else:
             title = "{}+{}, supply={}".format(self.matching_method, self.routing_method, self.quantity_supplied)
-        self.recorder.print(title, save_dir)
+        self.recorder.print(title, save_dir, self.timestep)
 
 
 

@@ -1,0 +1,2 @@
+angle+insertion, supply=under
+{"serve_time": 47.51, "occupancy_rate": 0.42, "waiting_time": 147.64, "detour_time": 250.75, "accept_rate": 0.6, "throughput": 151.23}

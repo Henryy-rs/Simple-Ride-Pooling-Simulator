@@ -1,0 +1,2 @@
+rsubgraph+insertion, supply=under
+{"serve_time": 49.7, "occupancy_rate": 0.34, "waiting_time": 528.83, "detour_time": 420.77, "accept_rate": 0.47, "throughput": 111.11}

@@ -1,0 +1,2 @@
+rsubgraph+insertion, supply=balanced
+{"serve_time": 50.9, "occupancy_rate": 0.34, "waiting_time": 482.88, "detour_time": 372.12, "accept_rate": 0.73, "throughput": 175.84}

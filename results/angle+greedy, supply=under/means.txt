@@ -1,0 +1,2 @@
+angle+greedy, supply=under
+{"serve_time": 47.72, "occupancy_rate": 0.42, "waiting_time": 153.92, "detour_time": 301.53, "accept_rate": 0.61, "throughput": 152.77}
