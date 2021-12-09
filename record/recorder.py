@@ -68,29 +68,13 @@ class Recorder:
             else:
                 # get average metrics values
                 average_dict = {}
+
                 for metric, value in self.vehicle_log[v_id].items():
                     average_dict[metric] = (value*(step - 1) + metrics[metric])/step
                 self.vehicle_log[v_id] = average_dict
 
-            """
-            if v_id in self.v_df.index:
-                series = pd.Series(metrics)
-                self.v_df.loc[v_id] = (self.v_df.loc[v_id]*(step-1) + series)/step
-            else:
-                tmp_df = pd.DataFrame(columns=list(metrics.keys()))
-                tmp_df = tmp_df.append(metrics, ignore_index=True)
-                tmp_df = tmp_df.astype(dict_v2type(metrics))
-                tmp_df = tmp_df.set_index('v_id')
-                self.v_df = pd.concat([self.v_df, tmp_df], axis=0)
-            """
-
         else:
             self.system_log[step] = metrics
-            """
-            else:
-                for metric, value in self.system_log.items():
-                    self.system_log[metric] = (value * (step-1) + metrics[metric]) / step
-            """
 
     def record_requests(self, requests):
         if not requests:
@@ -130,7 +114,6 @@ class Recorder:
         self.r_df = pd.DataFrame.from_dict(self.request_log, orient='index')  # 2
         self.sys_df = pd.DataFrame.from_dict(self.system_log, orient='index') # 3
 
-        print(self.r_df)
         metrics = {}
         n_metrics = len(self.v_df.columns) + len(self.r_df.columns)
         fig, axes = plt.subplots(1, n_metrics, figsize=(18, 12))
@@ -227,9 +210,4 @@ class Recorder:
             i += 1
 
         plt.savefig(path.join(save_dir, "metrics.pdf"),  bbox_inches='tight')
-
-
-def dict_v2type(dic):
-    keys = list(dic.keys())
-    types = list(map(lambda x: type(x).__name__, list(dic.values())))
-    return dict(zip(keys, types))
+        
