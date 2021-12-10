@@ -13,7 +13,7 @@ https://drive.google.com/file/d/1LztpfhNMtibB7oPxVmKtdTCqL1vh-oet/view?usp=shari
 
 you can get paths.pickle by running generate_pickle.py but it will takes more than a day. I recommand you to download a file above.
 
- ## options
+ ## Options
  
  matching method:
  - greedy
@@ -40,6 +40,8 @@ example
  ```bash
  python main.py --days 7 --matching_method greedy --routing_method insertion --supply under
  ```
+ 
+ ## Metrics
  
  ## Result
  
