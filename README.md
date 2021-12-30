@@ -18,8 +18,8 @@ you can get paths.pickle by running generate_pickle.py but it will takes more th
  matching method:
  - greedy
  - restricted subgraph (https://arxiv.org/pdf/2107.11318.pdf)
- - angle (our own heuristic!)!
- [KakaoTalk_20211219_131041277](https://user-images.githubusercontent.com/28619620/147720676-9d492c3b-4411-4d57-b5dd-e6726bbb2253.jpg)
+ - angle (our own heuristic!)
+ ![KakaoTalk_20211219_131041277](https://user-images.githubusercontent.com/28619620/147720676-9d492c3b-4411-4d57-b5dd-e6726bbb2253.jpg)
 
  
  
